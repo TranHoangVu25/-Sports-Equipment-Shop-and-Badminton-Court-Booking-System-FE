@@ -1,4 +1,6 @@
-const RegisterForm = ({ onLoginClick }) => {
+import { Link } from 'react-router-dom';
+
+const RegisterForm = () => {
   return (
     <div className="max-w-md w-full !bg-white p-8 rounded-lg shadow-sm border border-gray-100">
       
@@ -10,13 +12,13 @@ const RegisterForm = ({ onLoginClick }) => {
 
       <div className="text-center mb-6 text-sm !text-gray-600">
         Đã có tài khoản, đăng nhập{' '}
-        <button 
-          type="button" 
-          onClick={onLoginClick} 
-          className="!text-[#eb5322] hover:!underline transition-colors !bg-transparent !border-none !p-0 cursor-pointer"
+        {/* Đã sử dụng Link của react-router-dom */}
+        <Link 
+          to="/login" 
+          className="!text-[#eb5322] hover:!underline transition-colors !no-underline"
         >
           tại đây
-        </button>
+        </Link>
       </div>
 
       {/* Form */}

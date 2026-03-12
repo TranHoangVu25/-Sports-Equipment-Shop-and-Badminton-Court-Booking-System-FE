@@ -1,18 +1,7 @@
-import React, { useState } from 'react';
-import { 
-  Search, 
-  MapPin, 
-  Phone, 
-  User, 
-  ShoppingCart, 
-  ChevronDown, 
-  Gamepad2, 
-  ShoppingBag,
-  MessageCircle,
-  Eye,
-  EyeOff
-} from 'lucide-react';
-const ForgotPasswordForm = ({ onLoginClick }) => {
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+
+const ForgotPasswordForm = () => {
   const [captchaCode, setCaptchaCode] = useState('');
 
   // Sinh mã captcha ngẫu nhiên 4 chữ số khi component được render
@@ -77,16 +66,17 @@ const ForgotPasswordForm = ({ onLoginClick }) => {
         </div>
         
         <div className="flex items-center justify-end text-sm !text-gray-600 mt-4">
-           <button 
-             type="button" 
-             onClick={onLoginClick} 
-             className="!text-gray-600 hover:!text-[#eb5322] hover:!underline transition-colors !bg-transparent !border-none !p-0 cursor-pointer"
+           {/* Đã sử dụng Link của react-router-dom */}
+           <Link 
+             to="/login" 
+             className="!text-gray-600 hover:!text-[#eb5322] hover:!underline transition-colors !no-underline"
            >
              Đăng nhập tại đây
-           </button>
+           </Link>
         </div>
       </form>
     </div>
   );
 };
+
 export default ForgotPasswordForm;

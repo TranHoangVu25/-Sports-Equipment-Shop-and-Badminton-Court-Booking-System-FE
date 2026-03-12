@@ -1,18 +1,10 @@
-import React, { useState } from 'react';
-import { 
-  Search, 
-  MapPin, 
-  Phone, 
-  User, 
-  ShoppingCart, 
-  ChevronDown, 
-  Gamepad2, 
-  ShoppingBag,
-  MessageCircle,
+import {
   Eye,
   EyeOff
 } from 'lucide-react';
-const LoginForm = ({ onForgotPasswordClick, onRegisterClick }) => {
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
 
   return (
@@ -51,11 +43,7 @@ const LoginForm = ({ onForgotPasswordClick, onRegisterClick }) => {
             className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-[#eb5322] focus:outline-none bg-transparent border-none cursor-pointer"
             onClick={() => setShowPassword(!showPassword)}
           >
-            {showPassword ? (
-              <EyeOff size={20} />
-            ) : (
-              <Eye size={20} />
-            )}
+            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
           </button>
         </div>
 
@@ -69,20 +57,19 @@ const LoginForm = ({ onForgotPasswordClick, onRegisterClick }) => {
         </div>
         
         <div className="flex items-center justify-end text-sm !text-gray-600 mt-4 space-x-1">
-           <button 
-             type="button" 
-             onClick={onForgotPasswordClick} 
-             className="!text-blue-600 hover:!text-[#eb5322] hover:!underline transition-colors !bg-transparent !border-none !p-0 cursor-pointer"
+           {/* Đã sử dụng Link của react-router-dom */}
+           <Link 
+             to="/forgot-password" 
+             className="!text-blue-600 hover:!text-[#eb5322] hover:!underline transition-colors !no-underline"
            >
              Quên mật khẩu
-           </button>
-           <button 
-             type="button" 
-             onClick={onRegisterClick} 
-             className="!text-gray-600 hover:!text-[#eb5322] hover:!underline transition-colors !bg-transparent !border-none !p-0 cursor-pointer"
+           </Link>
+           <Link 
+             to="/register" 
+             className="!text-gray-600 hover:!text-[#eb5322] hover:!underline transition-colors !no-underline"
            >
              Đăng ký tại đây
-           </button>
+           </Link>
         </div>
       </form>
     </div>
