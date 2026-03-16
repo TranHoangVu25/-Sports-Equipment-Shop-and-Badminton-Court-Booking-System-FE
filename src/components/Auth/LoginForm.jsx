@@ -4,6 +4,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+
 const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
@@ -36,13 +37,8 @@ const LoginForm = () => {
         // Có thể lưu thêm thông tin user nếu cần hiển thị tên ở Header
         localStorage.setItem('user', JSON.stringify(data.result));
 
-        // 2. Kiểm tra role và chuyển hướng
-        if (role === 'ROLE_user') {
-          navigate('/'); // Điều hướng về HomePage
-        } else {
-          // Xử lý các role khác (ví dụ: ROLE_admin)
-          navigate('/'); 
-        }
+        // 2. Refresh lại toàn bộ web để TopBar tự động kiểm tra lại localStorage
+        window.location.href = '/'; 
       } else {
         // Hiển thị lỗi từ backend trả về hoặc lỗi mặc định
         setError(data.message || 'Tài khoản hoặc mật khẩu không chính xác.');
