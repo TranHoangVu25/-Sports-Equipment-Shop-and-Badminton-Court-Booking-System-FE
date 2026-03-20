@@ -9,6 +9,8 @@ import RegisterPage from "../modules/auth/pages/RegisterPage";
 import HomePage from "../modules/auth/pages/HomePage";
 import ProfilePage from "../modules/auth/pages/ProfilePage";
 import ResetPassworPage from "../modules/auth/pages/ResetPassworPage";
+import CartPage from "../modules/auth/pages/CartPage";
+
 
 const AppRoutes = () => {
   return (
@@ -20,7 +22,7 @@ const AppRoutes = () => {
         <Route path="/register" element={<MainLayout><RegisterPage /></MainLayout>} />
         <Route path="/profile" element={<MainLayout><ProfilePage /></MainLayout>} />
         <Route path="/reset-password" element={<MainLayout><ResetPassworPage /></MainLayout>} />
-
+        <Route path="/cart" element={<MainLayout><CartPage /></MainLayout>} />
       </Routes>
     </BrowserRouter>
   );
