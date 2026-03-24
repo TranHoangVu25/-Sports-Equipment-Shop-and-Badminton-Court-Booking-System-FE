@@ -12,6 +12,8 @@ import ProfilePage from "../modules/auth/pages/ProfilePage";
 import RegisterPage from "../modules/auth/pages/RegisterPage";
 import ResetPassworPage from "../modules/auth/pages/ResetPassworPage";
 import SearchPage from "../modules/auth/pages/SearchPage";
+import CheckoutPage from "../modules/auth/pages/CheckoutPage";
+
 
 const AppRoutes = () => {
   return (
@@ -26,6 +28,7 @@ const AppRoutes = () => {
         <Route path="/cart" element={<MainLayout><CartPage /></MainLayout>} />
         <Route path="/search" element={<MainLayout><SearchPage /></MainLayout>} />
         <Route path="/product-detail/:id" element={<MainLayout><ProductDetailPage /></MainLayout>} />
+        <Route path="/checkout" element={<MainLayout><CheckoutPage /></MainLayout>} />
 
       </Routes>
     </BrowserRouter>

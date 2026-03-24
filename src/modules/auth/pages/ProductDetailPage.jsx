@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { 
   ChevronRight, 
   Minus, 
@@ -7,7 +7,9 @@ import {
   CheckCircle2,
   Loader2,
   ShieldCheck,
-  Truck
+  Truck,
+  AlertCircle,
+  X
 } from 'lucide-react';
 
 // Dữ liệu danh mục ở cột bên phải theo ảnh thiết kế
@@ -26,6 +28,7 @@ const formatPrice = (price) => {
 const ProductDetailPage = () => {
   // Lấy ID sản phẩm từ URL (Bắt buộc route phải khai báo là /product-detail/:id)
   const { id } = useParams(); 
+  const navigate = useNavigate();
   
   const [product, setProduct] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -34,6 +37,17 @@ const ProductDetailPage = () => {
   const [selectedImage, setSelectedImage] = useState('');
   const [selectedVariant, setSelectedVariant] = useState(null); 
   const [quantity, setQuantity] = useState(1);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+
+  // Trạng thái cho Toast Notification góc phải trên
+  const [toast, setToast] = useState({ show: false, type: 'success', message: '' });
+
+  const showToast = (type, message) => {
+    setToast({ show: true, type, message });
+    setTimeout(() => {
+      setToast(prev => ({ ...prev, show: false }));
+    }, 3000); // Ẩn sau 3 giây
+  };
 
   // FETCH DỮ LIỆU TỪ API
   useEffect(() => {
@@ -49,7 +63,7 @@ const ProductDetailPage = () => {
       setError(null);
 
       try {
-        // 2. Gọi API sử dụng chính xác ID từ Params (đã bỏ ID mặc định)
+        // 2. Gọi API sử dụng chính xác ID từ Params
         const response = await fetch(`http://localhost:8086/api/v1/products/detail/${id}`);
         const data = await response.json();
 
@@ -141,9 +155,79 @@ const ProductDetailPage = () => {
 
   const mockOldPrice = (product?.price || 0) * 1.2;
 
+  // ==========================================
+  // HÀM XỬ LÝ THÊM VÀO GIỎ HÀNG (GỌI API)
+  // ==========================================
+  const handleAddToCart = async () => {
+    const token = localStorage.getItem('token');
+    
+    // Kiểm tra Auth Token
+    if (!token) {
+      showToast('error', 'Vui lòng đăng nhập để thêm vào giỏ hàng.');
+      setTimeout(() => {
+        navigate('/login');
+      }, 1500); // Đợi 1.5s để người dùng đọc thông báo rồi mới redirect
+      return;
+    }
+
+    setIsAddingToCart(true);
+
+    try {
+      const payload = {
+        id: String(product.productId),
+        quantity: quantity,
+        sku: selectedVariant?.sku || null,
+        size: selectedVariant?.size || null
+      };
+
+      const response = await fetch('http://localhost:8086/api/v1/cart/add-to-cart', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await response.json();
+
+      if (response.ok && (data.code === 200 || data.code === 0)) {
+        showToast('success', 'Đã thêm sản phẩm vào giỏ hàng thành công!');
+        // Tùy chọn: Ở đây bạn có thể dispatch 1 event hoặc gọi function update giỏ hàng chung
+      } else {
+        if (response.status === 401 || response.status === 403) {
+          showToast('error', 'Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.');
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          setTimeout(() => navigate('/login'), 1500);
+        } else {
+          showToast('error', data.message || 'Thêm vào giỏ hàng thất bại. Vui lòng thử lại.');
+        }
+      }
+    } catch (err) {
+      console.error("Lỗi gọi api add-to-cart:", err);
+      showToast('error', 'Không thể kết nối đến máy chủ.');
+    } finally {
+      setIsAddingToCart(false);
+    }
+  };
+
   return (
-    <div className="w-full min-h-screen bg-white pb-20 font-sans">
+    <div className="w-full min-h-screen bg-white pb-20 font-sans relative">
       
+      {/* TOAST NOTIFICATION GÓC PHẢI TRÊN MÀN HÌNH */}
+      {toast.show && (
+        <div className={`fixed top-20 right-5 z-[9999] flex items-center p-4 mb-4 text-sm rounded-lg shadow-2xl transition-all duration-500 transform border ${toast.type === 'success' ? 'text-green-800 border-green-200 bg-white' : 'text-red-800 border-red-200 bg-white'}`} role="alert">
+          {toast.type === 'success' ? <CheckCircle2 className="flex-shrink-0 inline w-5 h-5 mr-3 text-green-500" /> : <AlertCircle className="flex-shrink-0 inline w-5 h-5 mr-3 text-red-500" />}
+          <div className="font-medium mr-4">
+            {toast.message}
+          </div>
+          <button onClick={() => setToast({show: false})} className={`ml-auto -mx-1.5 -my-1.5 rounded-lg focus:ring-2 p-1.5 inline-flex h-8 w-8 transition-colors border-none cursor-pointer ${toast.type === 'success' ? 'bg-green-50 hover:bg-green-100 focus:ring-green-400' : 'bg-red-50 hover:bg-red-100 focus:ring-red-400'}`}>
+             <X size={16} className={toast.type === 'success' ? "text-green-600" : "text-red-600"}/>
+          </button>
+        </div>
+      )}
+
       {/* 1. BREADCRUMB */}
       <div className="bg-gray-50/50 border-b border-gray-100 py-2.5 mb-8">
         <div className="max-w-7xl mx-auto px-4 flex items-center flex-wrap text-[13px] text-gray-500 gap-y-2">
@@ -313,7 +397,7 @@ const ProductDetailPage = () => {
                 <div className="flex items-center border border-gray-300 rounded-sm">
                   <button 
                     onClick={() => handleQuantityChange(-1)}
-                    disabled={isOutOfStock || !selectedVariant || selectedVariant.quantity === 0}
+                    disabled={isOutOfStock || !selectedVariant || selectedVariant.quantity === 0 || isAddingToCart}
                     className="w-10 h-10 text-gray-600 flex items-center justify-center hover:bg-gray-100 transition-colors border-none bg-transparent cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Minus size={16} strokeWidth={2.5} />
@@ -323,11 +407,11 @@ const ProductDetailPage = () => {
                     value={quantity} 
                     readOnly 
                     className="w-12 h-10 border-x border-gray-300 text-center text-[15px] font-bold text-gray-800 outline-none disabled:opacity-50"
-                    disabled={isOutOfStock}
+                    disabled={isOutOfStock || isAddingToCart}
                   />
                   <button 
                     onClick={() => handleQuantityChange(1)}
-                    disabled={isOutOfStock || !selectedVariant || selectedVariant.quantity === 0}
+                    disabled={isOutOfStock || !selectedVariant || selectedVariant.quantity === 0 || isAddingToCart}
                     className="w-10 h-10 text-gray-600 flex items-center justify-center hover:bg-gray-100 transition-colors border-none bg-transparent cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Plus size={16} strokeWidth={2.5} />
@@ -345,30 +429,33 @@ const ProductDetailPage = () => {
               {/* Nút Call To Action */}
               <div className="grid grid-cols-2 gap-3 mb-3">
                 <button 
-                  disabled={isOutOfStock || !selectedVariant || selectedVariant.quantity === 0}
+                  disabled={isOutOfStock || !selectedVariant || selectedVariant.quantity === 0 || isAddingToCart}
                   className="w-full bg-[#fbad18] hover:bg-[#e59b12] text-white font-bold py-3.5 px-2 uppercase text-[15px] rounded-sm transition-colors border-none cursor-pointer shadow-sm active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Mua ngay
                 </button>
+
+                {/* Gắn sự kiện thêm vào giỏ hàng và UI Loading */}
                 <button 
-                  disabled={isOutOfStock || !selectedVariant || selectedVariant.quantity === 0}
-                  className="w-full bg-[#dd4b39] hover:bg-[#c93e2d] text-white font-bold py-3.5 px-2 uppercase text-[15px] rounded-sm transition-colors border-none cursor-pointer shadow-sm active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={handleAddToCart}
+                  disabled={isOutOfStock || !selectedVariant || selectedVariant.quantity === 0 || isAddingToCart}
+                  className="w-full bg-[#dd4b39] hover:bg-[#c93e2d] text-white font-bold py-3.5 px-2 uppercase text-[15px] rounded-sm transition-colors border-none cursor-pointer shadow-sm active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  Thêm vào giỏ hàng
+                  {isAddingToCart ? <><Loader2 size={18} className="animate-spin" /> Đang thêm...</> : 'Thêm vào giỏ hàng'}
                 </button>
               </div>
 
               {/* Nút thanh toán phụ */}
               <div className="grid grid-cols-2 gap-3 mb-3">
                 <button 
-                  disabled={isOutOfStock}
+                  disabled={isOutOfStock || isAddingToCart}
                   className="w-full bg-[#e3001b] hover:bg-[#cc0018] text-white py-2 rounded-sm transition-colors border-none cursor-pointer flex flex-col items-center justify-center h-14 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <span className="font-bold text-[13px] uppercase">Thanh toán qua thẻ</span>
                   <span className="text-[10px] font-normal mt-0.5">Visa, Master, JCB</span>
                 </button>
                 <button 
-                  disabled={isOutOfStock}
+                  disabled={isOutOfStock || isAddingToCart}
                   className="w-full bg-[#2084d9] hover:bg-[#1b75c2] text-white py-2 rounded-sm transition-colors border-none cursor-pointer flex flex-col items-center justify-center h-14 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <span className="font-bold text-[13px] uppercase">Trả góp qua thẻ</span>
@@ -377,7 +464,7 @@ const ProductDetailPage = () => {
               </div>
               
               <button 
-                disabled={isOutOfStock}
+                disabled={isOutOfStock || isAddingToCart}
                 className="w-full bg-[#fae30c] hover:bg-[#f0d908] text-gray-900 py-2 rounded-sm transition-colors border-none cursor-pointer flex flex-col items-center justify-center h-14 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <span className="font-bold text-[13px] uppercase tracking-wide">Mua ngay - Trả sau</span>

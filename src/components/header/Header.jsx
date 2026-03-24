@@ -212,29 +212,39 @@ const Header = () => {
     const [searchValue, setSearchValue] = useState('');
     const navigate = useNavigate();
 
-    const [cartItems, setCartItems] = useState([
-      {
-        id: 1,
-        name: 'Vợt cầu lông Yonex Astrox 22 Lite (BK/RD) chính hãng',
-        size: '3F5',
-        price: 2349000,
-        quantity: 1,
-        image: 'https://cdn.shopvnb.com/img/100x100/uploads/gallery/vot-cau-long-yonex-astrox-22-lite-bkrd-chinh-hang_1741200200.webp'
-      },
-      {
-        id: 2,
-        name: 'Giày cầu lông Yonex Velo 300 Chính Hãng - White/Black',
-        size: '40.5',
-        price: 679000,
-        quantity: 1,
-        image: 'https://cdn.shopvnb.com/img/100x100/uploads/gallery/giay-cau-long-yonex-velo-300-chinh-hang-white-black_1741200061.webp'
-      }
-    ]);
+    // Thay thế Mock data bằng dữ liệu thực từ API
+    const [cartItems, setCartItems] = useState([]);
+    const [totalPrice, setTotalPrice] = useState(0);
 
     useEffect(() => {
       const token = localStorage.getItem('token');
       setIsLoggedIn(!!token);
+      if (token) {
+        fetchCart(); // Gọi 1 lần lúc mount để lấy số badge
+      }
     }, []);
+
+    // HÀM GỌI API LẤY GIỎ HÀNG
+    const fetchCart = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      try {
+        const response = await fetch('http://localhost:8086/api/v1/cart/get-user-cart', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        const data = await response.json();
+        
+        if (response.ok && data.code === 0 && data.result) {
+          setCartItems(data.result.cartItems || []);
+          setTotalPrice(data.result.totalPrice || 0);
+        }
+      } catch (error) {
+        console.error('Lỗi khi lấy giỏ hàng trên Header:', error);
+      }
+    };
 
     const handleLogout = async () => {
       try {
@@ -269,10 +279,15 @@ const Header = () => {
       }
     };
 
-    const totalPrice = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-
     const formatPrice = (price) => {
-      return price.toLocaleString('vi-VN') + ' đ';
+      return price ? Number(price).toLocaleString('vi-VN') + ' ₫' : '0 ₫';
+    };
+
+    // Hàm gọi khi di chuột vào icon giỏ hàng để luôn làm mới dữ liệu
+    const handleCartHover = () => {
+      if (isLoggedIn) {
+        fetchCart();
+      }
     };
 
     return (
@@ -366,18 +381,26 @@ const Header = () => {
               </div>
             </div>
 
-            <div className="flex flex-col items-center cursor-pointer group relative">
+            {/* NÚT GIỎ HÀNG */}
+            <div 
+              className="flex flex-col items-center cursor-pointer group relative"
+              onMouseEnter={handleCartHover} // Gọi API khi di chuột vào
+            >
               <div 
                 onClick={() => { navigate('/cart'); handleActionComplete(); }}
                 className="!bg-gray-100 p-2 rounded-full mb-1 group-hover:!bg-orange-50 relative"
               >
                  <ShoppingCart size={20} className="!text-gray-600 group-hover:!text-[#eb5322]" />
-                 <span className="absolute -top-1 -right-1 !bg-[#eb5322] !text-white text-[10px] font-bold h-4 w-4 flex items-center justify-center rounded-full border border-white">
-                   {cartItems.length}
-                 </span>
+                 {/* Số lượng badge */}
+                 {cartItems.length > 0 && (
+                   <span className="absolute -top-1 -right-1 !bg-[#eb5322] !text-white text-[10px] font-bold h-4 w-4 flex items-center justify-center rounded-full border border-white">
+                     {cartItems.length}
+                   </span>
+                 )}
               </div>
               <span className="text-[10px] uppercase font-semibold !text-gray-600 group-hover:!text-[#eb5322]">Giỏ hàng</span>
 
+              {/* DROPDOWN GIỎ HÀNG */}
               <div className={`hidden ${forceCloseMenu ? '' : 'group-hover:block'} absolute top-full right-0 w-[320px] pt-2 z-[9999]`}>
                 <div className="!bg-white border border-gray-200 shadow-2xl rounded-sm overflow-hidden">
                   <div className="!bg-[#eb5322] !text-white text-[11px] font-bold px-3 py-2 uppercase">
@@ -385,47 +408,65 @@ const Header = () => {
                   </div>
                   
                   <div className="max-h-[300px] overflow-y-auto divide-y divide-gray-100">
-                    {cartItems.length === 0 ? (
-                      <div className="p-4 text-center text-xs text-gray-500 italic">Giỏ hàng trống</div>
+                    {!isLoggedIn ? (
+                      <div className="p-6 text-center text-xs text-gray-500 italic">
+                        Vui lòng <Link to="/login" className="text-[#eb5322] hover:underline font-bold">đăng nhập</Link> để xem giỏ hàng.
+                      </div>
+                    ) : cartItems.length === 0 ? (
+                      <div className="p-6 text-center text-xs text-gray-500 italic">
+                        Giỏ hàng trống
+                      </div>
                     ) : (
-                      cartItems.slice(0, 3).map((item) => (
-                        <div key={item.id} className="p-3 flex gap-3 relative group/item hover:bg-gray-50 transition-colors">
-                          <div className="w-12 h-12 flex-shrink-0 border border-gray-100 p-1">
-                            <img src={item.image} alt={item.name} className="w-full h-full object-contain" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h4 className="text-[11px] font-medium !text-gray-800 line-clamp-2 leading-tight mb-1">
-                              {item.name}
-                            </h4>
-                            <p className="text-[10px] text-gray-400 mb-2">Size: {item.size}</p>
-                            <div className="flex items-center border border-gray-200 rounded-sm w-fit">
-                              <button className="px-1 border-r border-gray-200 hover:bg-gray-100"><Minus size={10} /></button>
-                              <span className="px-2 text-[10px] font-bold">{item.quantity}</span>
-                              <button className="px-1 border-l border-gray-200 hover:bg-gray-100"><Plus size={10} /></button>
+                      cartItems.slice(0, 3).map((item) => {
+                        const hasSize = item.size && item.size.toLowerCase() !== 'default';
+                        const displaySize = hasSize ? String(item.size).replace('-', '.') : '';
+
+                        return (
+                          <div key={item.cartItemId} className="p-3 flex gap-3 relative group/item hover:bg-gray-50 transition-colors">
+                            <div className="w-12 h-12 flex-shrink-0 border border-gray-100 p-1 bg-white">
+                              <img 
+                                src={item.image || 'https://via.placeholder.com/100x100?text=No+Image'} 
+                                alt={item.name} 
+                                className="w-full h-full object-contain" 
+                              />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="text-[11px] font-medium !text-gray-800 line-clamp-2 leading-tight mb-1" title={item.name}>
+                                {item.name}
+                              </h4>
+                              {hasSize && (
+                                <p className="text-[10px] text-gray-400 mb-2">Size: {displaySize}</p>
+                              )}
+                              
+                              {/* Thông tin số lượng x Giá */}
+                              <div className="text-[10px] text-gray-500 mt-1">
+                                {item.quantity} x <span className="font-bold text-[#eb5322]">{formatPrice(item.price)}</span>
+                              </div>
+                            </div>
+                            
+                            {/* Xóa sản phẩm khỏi mini cart - có thể redirect vào cart page để người dùng thao tác dễ hơn */}
+                            <div className="flex flex-col items-end justify-between">
+                              <span className="text-[11px] font-bold !text-[#eb5322] whitespace-nowrap mt-auto pb-1">
+                                {formatPrice(item.price * item.quantity)}
+                              </span>
                             </div>
                           </div>
-                          <div className="flex flex-col items-end justify-between">
-                            <button className="!text-gray-400 hover:!text-red-500"><X size={14} /></button>
-                            <span className="text-[11px] font-bold !text-[#eb5322] whitespace-nowrap">
-                              {formatPrice(item.price)}
-                            </span>
-                          </div>
-                        </div>
-                      ))
+                        );
+                      })
                     )}
                   </div>
 
                   {cartItems.length > 0 && (
                     <div className="p-3 bg-gray-50 border-t border-gray-200">
                       <div className="flex justify-between items-center mb-3">
-                        <span className="text-[11px] font-medium text-gray-600">Tổng tiền:</span>
+                        <span className="text-[11px] font-medium text-gray-600">Tổng cộng ({cartItems.length} loại):</span>
                         <span className="text-[13px] font-bold !text-[#eb5322]">{formatPrice(totalPrice)}</span>
                       </div>
                       <button 
                         onClick={() => { navigate('/cart'); handleActionComplete(); }}
                         className="w-full !bg-[#eb5322] hover:!bg-[#d04316] !text-white text-[11px] font-bold py-2 rounded-sm uppercase transition-colors border-none cursor-pointer"
                       >
-                        Đặt hàng
+                        Tới giỏ hàng để thanh toán
                       </button>
                     </div>
                   )}
@@ -438,9 +479,6 @@ const Header = () => {
     );
   };
 
-  // ==========================================
-  // NAVIGATION COMPONENT
-  // ==========================================
   const Navigation = () => {
     const navItems = [
       { label: 'TRANG CHỦ', link: "/" },
