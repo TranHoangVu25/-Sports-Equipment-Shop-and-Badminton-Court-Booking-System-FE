@@ -111,9 +111,13 @@ const CartForm = ({ cartItems, updateQuantity, removeItem, totalPrice, formatPri
             <span className="text-[18px] font-bold !text-[#eb5322]">{formatPrice(totalPrice)}</span>
           </div>
           
-          <button className="w-full !bg-[#eb5322] hover:!bg-[#d04316] !text-white font-bold py-3.5 rounded-sm uppercase tracking-[0.1em] text-sm transition-all border-none cursor-pointer shadow-md active:scale-[0.98]">
+          {/* Nút đặt hàng giờ đây là một liên kết sang trang checkout */}
+          <Link 
+            to="/checkout"
+            className="flex justify-center items-center w-full !bg-[#eb5322] hover:!bg-[#d04316] !text-white font-bold py-3.5 rounded-sm uppercase tracking-[0.1em] text-sm transition-all border-none cursor-pointer shadow-md active:scale-[0.98] !no-underline"
+          >
             ĐẶT HÀNG
-          </button>
+          </Link>
         </div>
       )}
     </div>
