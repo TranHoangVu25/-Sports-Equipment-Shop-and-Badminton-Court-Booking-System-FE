@@ -28,7 +28,7 @@ const AppRoutes = () => {
         <Route path="/cart" element={<MainLayout><CartPage /></MainLayout>} />
         <Route path="/search" element={<MainLayout><SearchPage /></MainLayout>} />
         <Route path="/product-detail/:id" element={<MainLayout><ProductDetailPage /></MainLayout>} />
-        <Route path="/checkout" element={<MainLayout><CheckoutPage /></MainLayout>} />
+        <Route path="/checkout" element={<CheckoutPage />} />
 
       </Routes>
     </BrowserRouter>
