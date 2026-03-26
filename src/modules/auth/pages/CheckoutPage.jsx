@@ -22,7 +22,7 @@ const CheckoutPage = () => {
   const [isFetchingData, setIsFetchingData] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // State phương thức thanh toán
+  // State phương thức thanh toán (cod hoặc stripe)
   const [paymentMethod, setPaymentMethod] = useState('cod');
 
   // Trạng thái cho Toast Notification
@@ -108,7 +108,9 @@ const CheckoutPage = () => {
     window.scrollTo(0, 0);
   }, [navigate]);
 
-  // XỬ LÝ ĐẶT HÀNG
+  // ==========================================
+  // XỬ LÝ ĐẶT HÀNG (CẢ COD VÀ STRIPE)
+  // ==========================================
   const handleCheckout = async () => {
     // 1. Kiểm tra validate form cơ bản
     if (!formData.fullName.trim() || !formData.phone.trim() || !formData.address.trim()) {
@@ -121,12 +123,12 @@ const CheckoutPage = () => {
       return;
     }
 
-    // 2. Gọi API Checkout theo phương thức thanh toán
-    if (paymentMethod === 'cod') {
-      const token = localStorage.getItem('token');
-      setIsSubmitting(true);
-      
-      try {
+    const token = localStorage.getItem('token');
+    setIsSubmitting(true);
+    
+    try {
+      if (paymentMethod === 'cod') {
+        // --- XỬ LÝ THANH TOÁN COD ---
         const response = await fetch('http://localhost:8086/api/v1/orders/checkout/cod', {
           method: 'POST',
           headers: {
@@ -138,7 +140,8 @@ const CheckoutPage = () => {
             phoneNumber: formData.phone,
             locationDetail: formData.address,
             email: formData.email,
-            note: formData.note
+            note: formData.note,
+            checkoutType: true // COD là true
           })
         });
 
@@ -146,21 +149,48 @@ const CheckoutPage = () => {
 
         if (response.ok && data.code === 0) {
           showToast('success', 'Đặt hàng thành công! Đang chuyển hướng...');
-          // Chuyển hướng về trang profile sau 2 giây
           setTimeout(() => {
             navigate('/profile');
           }, 2000);
         } else {
           showToast('error', data.message || 'Đặt hàng thất bại. Vui lòng thử lại.');
         }
-      } catch (error) {
-        console.error("Lỗi khi thanh toán COD:", error);
-        showToast('error', 'Lỗi kết nối đến máy chủ.');
-      } finally {
-        setIsSubmitting(false);
+
+      } else if (paymentMethod === 'stripe') {
+        // --- XỬ LÝ THANH TOÁN STRIPE ---
+        const response = await fetch('http://localhost:8086/api/v1/orders/checkout-stripe-url', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            recipient: formData.fullName,
+            phoneNumber: formData.phone,
+            locationDetail: formData.address,
+            email: formData.email,
+            note: formData.note,
+            checkoutType: false // Stripe là false
+          })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.code === 0 && data.result) {
+          showToast('success', 'Đang chuyển hướng đến cổng thanh toán an toàn...');
+          // Redirect trang hiện tại sang link của Stripe
+          setTimeout(() => {
+            window.location.href = data.result;
+          }, 1000);
+        } else {
+          showToast('error', data.message || 'Không thể tạo URL thanh toán. Vui lòng thử lại.');
+        }
       }
-    } else {
-      showToast('error', 'Phương thức thanh toán qua ngân hàng đang được bảo trì.');
+    } catch (error) {
+      console.error("Lỗi khi thanh toán:", error);
+      showToast('error', 'Lỗi kết nối đến máy chủ.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -190,13 +220,10 @@ const CheckoutPage = () => {
         </div>
       )}
 
-      {/* Sử dụng flex-[2] cho khối bên trái (chứa 2 cột con) và flex-1 cho khối bên phải 
-        giúp 3 cột hoàn toàn cách đều và bằng nhau (Tỉ lệ 2:1 -> 3 cột) 
-      */}
       <div className="w-full max-w-[1200px] flex flex-col lg:flex-row">
         
         {/* ========================================== */}
-        {/* CỘT TRÁI & GIỮA: FORM THÔNG TIN & THANH TOÁN (flex-[2]) */}
+        {/* CỘT TRÁI & GIỮA: FORM THÔNG TIN & THANH TOÁN */}
         {/* ========================================== */}
         <div className="flex-[2] p-4 md:p-8 lg:pr-10 pt-8">
           <Link to="/" className="inline-block mb-8 no-underline">
@@ -287,20 +314,21 @@ const CheckoutPage = () => {
                   </div>
                 </label>
 
-                {/* Thanh toán qua ngân hàng */}
+                {/* Thanh toán qua Stripe */}
                 <label className="flex items-center justify-between p-3 cursor-pointer hover:bg-gray-50 transition-colors">
                   <div className="flex items-center gap-3">
                     <input 
                       type="radio" 
                       name="paymentMethod" 
-                      value="bank"
-                      checked={paymentMethod === 'bank'}
-                      onChange={() => setPaymentMethod('bank')}
+                      value="stripe"
+                      checked={paymentMethod === 'stripe'}
+                      onChange={() => setPaymentMethod('stripe')}
                       className="w-4 h-4 accent-[#eb5322] cursor-pointer"
                     />
-                    <span className="text-[14px] text-gray-700">Thanh toán qua ngân hàng</span>
+                    <span className="text-[14px] text-gray-700">Thanh toán qua Stripe</span>
                   </div>
-                  <div className="text-[#eb5322]">
+                  <div className="text-[#eb5322] flex gap-1">
+                    {/* Thêm một số icon thẻ tượng trưng cho Stripe */}
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                       <path d="M2 20H22V22H2V20ZM12 2L22 7H2L12 2ZM4 10H7V18H4V10ZM10 10H14V18H10V10ZM17 10H20V18H17V10Z" fill="#eb5322"/>
                     </svg>
@@ -364,34 +392,24 @@ const CheckoutPage = () => {
                        SIÊU<br/>MỚI,<br/>SIÊU<br/>HOT
                      </div>
                   </div>
-                  <div className="py-3 flex items-start gap-3">
-                     <span className="text-[#e3001b] font-extrabold text-[10px] italic flex-shrink-0 leading-tight w-12 text-center">HOME<br/>PayLater</span>
-                     <p className="text-[11px] text-gray-800 flex-1 leading-snug font-medium m-0 pt-0.5">Giảm 5% - tối đa 200.000đ khi chọn kỳ hạn 6 & 12 tháng cho khách hàng đã phát sinh đơn hàng HPL</p>
-                     <div className="flex-shrink-0 bg-[#eb5322] text-white text-[8px] font-bold w-12 h-12 rounded-full flex items-center justify-center text-center shadow-sm leading-[1.1]">
-                       SIÊU<br/>MỚI,<br/>SIÊU<br/>HOT
-                     </div>
-                  </div>
                 </div>
-                
                 <div className="text-right px-3 py-1.5 bg-white border-t border-gray-100">
                   <span className="text-[9px] text-gray-400 italic">Powered by </span>
                   <span className="text-[10px] font-bold text-gray-700 tracking-tight">baokim</span>
                 </div>
               </div>
-
             </div>
           </div>
         </div>
 
         {/* ========================================== */}
-        {/* CỘT PHẢI: THÔNG TIN ĐƠN HÀNG (SIDEBAR) (flex-1) */}
+        {/* CỘT PHẢI: THÔNG TIN ĐƠN HÀNG (SIDEBAR) */}
         {/* ========================================== */}
         <div className="flex-1 bg-[#fafafa] border-l border-gray-200 p-4 md:p-8 pt-8 flex flex-col h-full sticky top-0">
           <h2 className="text-[17px] font-bold text-gray-800 mb-4 border-b border-gray-200 pb-4">
             Đơn hàng ({totalQuantity} sản phẩm)
           </h2>
 
-          {/* Chi tiết danh sách sản phẩm (có thanh cuộn nếu quá nhiều) */}
           <div className="max-h-[350px] overflow-y-auto pr-3 pt-3 space-y-6 mb-6 scrollbar-thin scrollbar-thumb-gray-300">
             {cartItems.length === 0 ? (
                <div className="text-center py-10 text-gray-400 italic text-sm flex flex-col items-center">
@@ -406,21 +424,16 @@ const CheckoutPage = () => {
                 return (
                   <div key={item.cartItemId} className="flex justify-between items-start gap-4">
                     <div className="flex items-start gap-3 flex-1 min-w-0">
-                      
-                      {/* Bọc Ảnh & Huy hiệu Số lượng */}
                       <div className="relative w-14 h-14 md:w-16 md:h-16 border border-gray-200 rounded-sm bg-white flex-shrink-0 p-1">
                         <img 
                           src={item.image || 'https://via.placeholder.com/100x100?text=No+Image'} 
                           alt={item.name} 
                           className="w-full h-full object-contain"
                         />
-                        {/* Badge Số lượng */}
                         <span className="absolute -top-2.5 -right-2.5 bg-[#eb5322] text-white rounded-full w-5 h-5 flex items-center justify-center text-[11px] font-bold shadow-sm z-10">
                           {item.quantity}
                         </span>
                       </div>
-                      
-                      {/* Tiêu đề & Size */}
                       <div className="flex-1 min-w-0 pr-2 pt-1">
                         <h3 className="text-[13px] font-medium text-gray-700 leading-snug line-clamp-2 m-0 mb-1" title={item.name}>
                           {item.name}
@@ -430,8 +443,6 @@ const CheckoutPage = () => {
                         )}
                       </div>
                     </div>
-
-                    {/* Giá */}
                     <div className="text-[14px] font-medium text-gray-800 whitespace-nowrap pt-1">
                       {formatPrice(item.price * item.quantity)}
                     </div>
@@ -443,7 +454,6 @@ const CheckoutPage = () => {
 
           <div className="border-t border-gray-200 my-4"></div>
 
-          {/* Nhập mã giảm giá */}
           <div className="flex gap-2 mb-6">
             <input 
               type="text" 
@@ -457,13 +467,11 @@ const CheckoutPage = () => {
 
           <div className="border-t border-gray-200 my-4"></div>
 
-          {/* Tổng tiền */}
           <div className="flex justify-between items-center mb-8">
             <span className="text-[15px] text-gray-600">Tổng cộng</span>
             <span className="text-[20px] font-bold text-gray-800">{formatPrice(totalPrice)}</span>
           </div>
 
-          {/* Nút hành động */}
           <div className="flex items-center gap-3 mb-6">
             <Link to="/cart" className="bg-[#5cb85c] hover:bg-[#4cae4c] text-white px-4 py-3 rounded-sm flex items-center gap-2 text-[13px] transition-colors no-underline">
               <Edit3 size={14} />
@@ -478,7 +486,6 @@ const CheckoutPage = () => {
             </button>
           </div>
 
-          {/* Ghi chú */}
           <div className="text-[13px] text-gray-500 italic space-y-2 leading-relaxed">
             <p className="m-0">- Giá trên chưa bao gồm phí vận chuyển. Phí vận chuyển sẽ được nhân viên báo khi xác nhận đơn hàng.</p>
             <p className="m-0">- Thời gian xử lý đơn hàng: Từ 8h00 - 17h thứ 2 đến thứ 7. Các đơn hàng sau thời gian này sẽ được xử lý vào ngày làm việc tiếp theo.</p>

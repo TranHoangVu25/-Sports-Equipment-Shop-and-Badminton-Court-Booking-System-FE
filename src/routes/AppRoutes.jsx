@@ -13,6 +13,8 @@ import RegisterPage from "../modules/auth/pages/RegisterPage";
 import ResetPassworPage from "../modules/auth/pages/ResetPassworPage";
 import SearchPage from "../modules/auth/pages/SearchPage";
 import CheckoutPage from "../modules/auth/pages/CheckoutPage";
+import OrderDetailPage from "../modules/auth/pages/OrderDetailPage";
+
 
 
 const AppRoutes = () => {
@@ -29,6 +31,8 @@ const AppRoutes = () => {
         <Route path="/search" element={<MainLayout><SearchPage /></MainLayout>} />
         <Route path="/product-detail/:id" element={<MainLayout><ProductDetailPage /></MainLayout>} />
         <Route path="/checkout" element={<CheckoutPage />} />
+        <Route path="/order-detail/:id" element={<MainLayout><OrderDetailPage /></MainLayout>} />
+
 
       </Routes>
     </BrowserRouter>
