@@ -1,8 +1,9 @@
 import { Loader2, MapPin, Phone, User } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+
 // =======================================================================
 // 1. MÀN HÌNH TỔNG QUAN (ProfileOverView)
-// Chỉ lấy 3 trường: Họ tên, Số ĐT, Địa chỉ từ API
 // =======================================================================
 const ProfileOverView = ({ userData, onEdit }) => {
   const nameDisplay = userData?.fullName || 'Chưa cập nhật';
@@ -72,6 +73,12 @@ const ProfileOverView = ({ userData, onEdit }) => {
       default: 
         return <span className="text-gray-500 bg-gray-50 px-2 py-1 rounded text-xs border border-gray-200">{status}</span>;
     }
+  };
+
+  // Hàm tách lấy ID sau dấu "_"
+  const getOrderId = (rawId) => {
+    const strId = String(rawId);
+    return strId.includes('_') ? strId.split('_').pop() : strId;
   };
 
   return (
@@ -147,8 +154,13 @@ const ProfileOverView = ({ userData, onEdit }) => {
                 ) : (
                   orders.map(order => (
                     <tr key={order.orderId} className="hover:bg-orange-50/30 transition-colors cursor-default">
-                      <td className="py-3.5 px-3 border-r border-gray-100 text-center font-medium text-gray-800">
-                        #{order.orderId}
+                      <td className="py-3.5 px-3 border-r border-gray-100 text-center font-medium">
+                        <Link 
+                          to={`/order-detail/${getOrderId(order.orderId)}`} 
+                          className="text-[#eb5322] font-bold hover:underline hover:text-[#d04316] transition-colors !no-underline"
+                        >
+                          #{order.orderId}
+                        </Link>
                       </td>
                       <td className="py-3.5 px-3 border-r border-gray-100 text-center text-gray-600">
                         {formatDate(order.createdAt)}
