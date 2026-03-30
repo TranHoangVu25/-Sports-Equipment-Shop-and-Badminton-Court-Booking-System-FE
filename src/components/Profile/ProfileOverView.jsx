@@ -10,9 +10,11 @@ const ProfileOverView = ({ userData, onEdit }) => {
   const phoneDisplay = userData?.phoneNumber || 'Chưa cập nhật';
   const locationDetailDisplay = userData?.location || 'Chưa cập nhật';
 
-  // State quản lý danh sách đơn hàng
+  // State quản lý danh sách đơn hàng & phân trang
   const [orders, setOrders] = useState([]);
   const [isLoadingOrders, setIsLoadingOrders] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   // Gọi API lấy danh sách đơn hàng
   useEffect(() => {
@@ -23,8 +25,11 @@ const ProfileOverView = ({ userData, onEdit }) => {
         return;
       }
 
+      setIsLoadingOrders(true);
+
       try {
-        const response = await fetch('http://localhost:8086/api/v1/orders/get-list-order', {
+        // Backend Spring Boot Pageable đánh số index từ 0, nên FE cần truyền currentPage - 1
+        const response = await fetch(`http://localhost:8086/api/v1/orders/get-list-order?page=${currentPage - 1}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -34,8 +39,10 @@ const ProfileOverView = ({ userData, onEdit }) => {
 
         const data = await response.json();
 
-        if (response.ok && data.code === 0) {
-          setOrders(data.result || []);
+        if (response.ok && data.code === 0 && data.result) {
+          // Lấy danh sách từ mảng content của Pageable
+          setOrders(data.result.content || []);
+          setTotalPages(data.result.totalPages || 1);
         }
       } catch (error) {
         console.error("Lỗi khi lấy danh sách đơn hàng:", error);
@@ -45,7 +52,7 @@ const ProfileOverView = ({ userData, onEdit }) => {
     };
 
     fetchOrders();
-  }, []);
+  }, [currentPage]);
 
   // Helper functions
   const formatPrice = (price) => {
@@ -79,6 +86,23 @@ const ProfileOverView = ({ userData, onEdit }) => {
   const getOrderId = (rawId) => {
     const strId = String(rawId);
     return strId.includes('_') ? strId.split('_').pop() : strId;
+  };
+
+  // Sinh mảng số trang để render
+  const getPageNumbers = () => {
+    const pages = [];
+    if (totalPages <= 5) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (currentPage <= 3) {
+        pages.push(1, 2, 3, 4, '...', totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+      } else {
+        pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+      }
+    }
+    return pages;
   };
 
   return (
@@ -119,67 +143,104 @@ const ProfileOverView = ({ userData, onEdit }) => {
         <div className="lg:col-span-2">
           <h2 className="text-base font-normal uppercase !text-gray-800 mb-5 tracking-wide border-b pb-2 font-sans flex items-center justify-between">
             <span>ĐƠN HÀNG CỦA BẠN</span>
-            {!isLoadingOrders && orders.length > 0 && (
-              <span className="text-xs font-medium text-gray-500 normal-case bg-gray-100 px-2 py-1 rounded-full">
-                {orders.length} đơn hàng
-              </span>
-            )}
           </h2>
           
-          <div className="overflow-x-auto border border-gray-200 mt-4 rounded-sm shadow-sm">
-            <table className="w-full text-sm border-collapse min-w-[650px] font-sans">
-              <thead>
-                <tr className="!bg-[#eb5322] !text-white text-center font-bold">
-                  <th className="py-3 px-3 border-r border-white/20 font-bold whitespace-nowrap uppercase text-xs tracking-wider">Mã ĐH</th>
-                  <th className="py-3 px-3 border-r border-white/20 font-bold whitespace-nowrap uppercase text-xs tracking-wider">Ngày đặt</th>
-                  <th className="py-3 px-4 border-r border-white/20 font-bold whitespace-nowrap uppercase text-xs tracking-wider text-left">Địa chỉ giao</th>
-                  <th className="py-3 px-3 border-r border-white/20 font-bold whitespace-nowrap uppercase text-xs tracking-wider text-right">Tổng tiền</th>
-                  <th className="py-3 px-3 font-bold whitespace-nowrap uppercase text-xs tracking-wider">Trạng thái</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 bg-white">
-                {isLoadingOrders ? (
-                  <tr>
-                    <td colSpan={5} className="py-16 text-center">
-                      <Loader2 size={30} className="animate-spin text-[#eb5322] mx-auto mb-3" />
-                      <span className="text-gray-500 italic">Đang tải dữ liệu...</span>
-                    </td>
+          <div className="border border-gray-200 mt-4 rounded-sm shadow-sm overflow-hidden bg-white">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm border-collapse min-w-[650px] font-sans">
+                <thead>
+                  <tr className="!bg-[#eb5322] !text-white text-center font-bold">
+                    <th className="py-3 px-3 border-r border-white/20 font-bold whitespace-nowrap uppercase text-xs tracking-wider">Mã ĐH</th>
+                    <th className="py-3 px-3 border-r border-white/20 font-bold whitespace-nowrap uppercase text-xs tracking-wider">Ngày đặt</th>
+                    <th className="py-3 px-4 border-r border-white/20 font-bold whitespace-nowrap uppercase text-xs tracking-wider text-left">Địa chỉ giao</th>
+                    <th className="py-3 px-3 border-r border-white/20 font-bold whitespace-nowrap uppercase text-xs tracking-wider text-right">Tổng tiền</th>
+                    <th className="py-3 px-3 font-bold whitespace-nowrap uppercase text-xs tracking-wider">Trạng thái</th>
                   </tr>
-                ) : orders.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="py-16 text-center !text-gray-500 italic bg-gray-50/50">
-                      Bạn chưa có đơn hàng nào.
-                    </td>
-                  </tr>
-                ) : (
-                  orders.map(order => (
-                    <tr key={order.orderId} className="hover:bg-orange-50/30 transition-colors cursor-default">
-                      <td className="py-3.5 px-3 border-r border-gray-100 text-center font-medium">
-                        <Link 
-                          to={`/order-detail/${getOrderId(order.orderId)}`} 
-                          className="text-[#eb5322] font-bold hover:underline hover:text-[#d04316] transition-colors !no-underline"
-                        >
-                          #{order.orderId}
-                        </Link>
-                      </td>
-                      <td className="py-3.5 px-3 border-r border-gray-100 text-center text-gray-600">
-                        {formatDate(order.createdAt)}
-                      </td>
-                      <td className="py-3.5 px-4 border-r border-gray-100 text-gray-600 max-w-[220px] truncate" title={order.locationDetail}>
-                        {order.locationDetail || 'Không có địa chỉ'}
-                      </td>
-                      <td className="py-3.5 px-3 border-r border-gray-100 text-right font-bold text-[#eb5322]">
-                        {formatPrice(order.totalAmount)}
-                      </td>
-                      <td className="py-3.5 px-3 text-center">
-                        {translateStatus(order.status)}
+                </thead>
+                <tbody className="divide-y divide-gray-100 bg-white">
+                  {isLoadingOrders ? (
+                    <tr>
+                      <td colSpan={5} className="py-16 text-center">
+                        <Loader2 size={30} className="animate-spin text-[#eb5322] mx-auto mb-3" />
+                        <span className="text-gray-500 italic">Đang tải dữ liệu...</span>
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ) : orders.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="py-16 text-center !text-gray-500 italic bg-gray-50/50">
+                        Bạn chưa có đơn hàng nào.
+                      </td>
+                    </tr>
+                  ) : (
+                    orders.map(order => (
+                      <tr key={order.orderId} className="hover:bg-orange-50/30 transition-colors cursor-default">
+                        <td className="py-3.5 px-3 border-r border-gray-100 text-center font-medium">
+                          <Link 
+                            to={`/order-detail/${getOrderId(order.orderId)}`} 
+                            className="text-[#eb5322] font-bold hover:underline hover:text-[#d04316] transition-colors !no-underline"
+                          >
+                            #{getOrderId(order.orderId)}
+                          </Link>
+                        </td>
+                        <td className="py-3.5 px-3 border-r border-gray-100 text-center text-gray-600">
+                          {formatDate(order.createdAt)}
+                        </td>
+                        <td className="py-3.5 px-4 border-r border-gray-100 text-gray-600 max-w-[220px] truncate" title={order.locationDetail}>
+                          {order.locationDetail || 'Không có địa chỉ'}
+                        </td>
+                        <td className="py-3.5 px-3 border-r border-gray-100 text-right font-bold text-[#eb5322]">
+                          {formatPrice(order.totalAmount)}
+                        </td>
+                        <td className="py-3.5 px-3 text-center">
+                          {translateStatus(order.status)}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
+
+          {/* Phân trang (Pagination) */}
+          {totalPages > 1 && !isLoadingOrders && (
+            <div className="mt-6 flex items-center justify-center gap-2">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="w-8 h-8 flex items-center justify-center rounded-sm border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+              >
+                &laquo;
+              </button>
+              
+              {getPageNumbers().map((page, idx) => (
+                page === '...' ? (
+                  <span key={`dots-${idx}`} className="px-2 text-gray-400">...</span>
+                ) : (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`w-8 h-8 flex items-center justify-center rounded-sm text-sm transition-colors border cursor-pointer ${
+                      currentPage === page 
+                        ? 'bg-[#eb5322] text-white border-[#eb5322] font-bold' 
+                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:text-[#eb5322]'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                )
+              ))}
+
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="w-8 h-8 flex items-center justify-center rounded-sm border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+              >
+                &raquo;
+              </button>
+            </div>
+          )}
+
         </div>
 
       </div>
