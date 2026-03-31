@@ -39,7 +39,7 @@ const OrderDetailPage = () => {
         if (response.ok && data.code === 0 && data.result) {
           const result = data.result;
           
-          // Mapping dữ liệu dựa trên cấu trúc API mới
+          // Mapping dữ liệu dựa trên cấu trúc API
           setOrderData({
             orderCode: result.orderId?.toString() || id,
             status: result.status || 'unknown',
@@ -47,7 +47,7 @@ const OrderDetailPage = () => {
             phone: result.phoneNumber || 'Không có thông tin',
             address: result.locationDetail || 'Không có thông tin',
             items: result.orderItems?.map((item, index) => ({
-              id: item.sku || index,
+              id: item.productId || index,
               name: item.productName || `Sản phẩm`, // Lấy từ productName
               size: item.size && String(item.size).toLowerCase() !== 'default' ? item.size : null,
               price: item.price || 0,
@@ -55,6 +55,9 @@ const OrderDetailPage = () => {
               image: item.imgUrl || "https://via.placeholder.com/100x100?text=No+Image", // Lấy từ imgUrl
               subTotal: (item.price || 0) * (item.quantity || 0)
             })) || [],
+            // Cập nhật thêm các trường về giá
+            subtotal: result.subtotal || 0,
+            discount: result.discount || 0,
             totalAmount: result.totalAmount || 0
           });
         } else {
@@ -185,7 +188,7 @@ const OrderDetailPage = () => {
         </div>
 
         {/* --- BẢNG SẢN PHẨM --- */}
-        <div className="border border-gray-200 rounded-sm overflow-x-auto shadow-sm">
+        <div className="border border-gray-200 rounded-sm overflow-x-auto shadow-sm mb-10">
           <table className="w-full text-left min-w-[700px] border-collapse">
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50/50">
@@ -234,12 +237,32 @@ const OrderDetailPage = () => {
             </tbody>
           </table>
           
-          {/* Dòng Tổng Tiền Cuối Bảng */}
-          <div className="flex justify-end items-center py-5 px-6 bg-gray-50/50 border-t border-gray-200 gap-16">
-            <span className="text-[15px] font-bold text-gray-700 uppercase tracking-wide">Tổng cộng:</span>
-            <span className="text-[20px] font-extrabold text-[#eb5322]">
-              {formatPrice(orderData.totalAmount)}
-            </span>
+          {/* Dòng Tổng Tiền Cuối Bảng Tích Hợp Giá Gốc và Giảm Giá */}
+          <div className="flex flex-col bg-gray-50/50 border-t border-gray-200 py-4 px-6 gap-3">
+            {orderData.discount > 0 && (
+              <>
+                <div className="flex justify-end items-center gap-16">
+                  <span className="text-[14px] text-gray-600">Giá gốc:</span>
+                  <span className="text-[15px] font-medium text-gray-800 min-w-[140px] text-right">
+                    {formatPrice(orderData.subtotal)}
+                  </span>
+                </div>
+                
+                <div className="flex justify-end items-center gap-16">
+                  <span className="text-[14px] text-gray-600">Giảm giá:</span>
+                  <span className="text-[15px] font-medium text-gray-800 min-w-[140px] text-right">
+                    - {formatPrice(orderData.discount)}
+                  </span>
+                </div>
+              </>
+            )}
+            
+            <div className={`flex justify-end items-center gap-16 ${orderData.discount > 0 ? 'pt-3 mt-1 border-t border-gray-200' : ''}`}>
+              <span className="text-[15px] font-bold text-gray-700 uppercase tracking-wide">Tổng thanh toán:</span>
+              <span className="text-[20px] font-extrabold text-gray-800 min-w-[140px] text-right">
+                {formatPrice(orderData.totalAmount)}
+              </span>
+            </div>
           </div>
         </div>
 

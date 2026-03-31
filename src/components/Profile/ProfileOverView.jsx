@@ -29,7 +29,7 @@ const ProfileOverView = ({ userData, onEdit }) => {
 
       try {
         // Backend Spring Boot Pageable đánh số index từ 0, nên FE cần truyền currentPage - 1
-        const response = await fetch(`http://localhost:8086/api/v1/orders/get-list-order?page=${currentPage - 1}`, {
+        const response = await fetch(`http://localhost:8086/api/v1/orders/get-user-list-order?page=${currentPage - 1}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
