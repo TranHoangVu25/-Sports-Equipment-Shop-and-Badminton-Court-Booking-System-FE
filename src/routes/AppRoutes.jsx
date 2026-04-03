@@ -35,9 +35,6 @@ const AppRoutes = () => {
         <Route path="/courts" element={<CourtPage />} />
         <Route path="/court-detail/:id" element={<CourtDetailPage />} />
 
-
-
-
       </Routes>
     </BrowserRouter>
   );
