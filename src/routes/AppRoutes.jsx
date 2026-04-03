@@ -15,9 +15,7 @@ import SearchPage from "../modules/auth/pages/SearchPage";
 import CheckoutPage from "../modules/auth/pages/CheckoutPage";
 import OrderDetailPage from "../modules/auth/pages/OrderDetailPage";
 import CourtPage from "../modules/auth/pages/CourtPage";
-
-
-
+import CourtDetailPage from "../modules/auth/pages/CourtDetailPage";
 
 const AppRoutes = () => {
   return (
@@ -35,6 +33,8 @@ const AppRoutes = () => {
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/order-detail/:id" element={<MainLayout><OrderDetailPage /></MainLayout>} />
         <Route path="/courts" element={<CourtPage />} />
+        <Route path="/court-detail/:id" element={<CourtDetailPage />} />
+
 
 
 

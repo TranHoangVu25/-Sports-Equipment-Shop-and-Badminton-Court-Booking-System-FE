@@ -93,7 +93,12 @@ const CourtPage = () => {
               const tags = ["Đơn ngày", "Sự kiện"]; // Fallback giả lập
 
               return (
-                <div key={court.courtCenterId} className="bg-white rounded-sm shadow-sm border border-gray-200 overflow-hidden flex flex-col group hover:shadow-md transition-shadow">
+                // Bọc toàn bộ Card bằng Link để chuyển sang trang chi tiết
+                <Link 
+                  to={`/court-detail/${court.courtCenterId}`}
+                  key={court.courtCenterId} 
+                  className="bg-white rounded-sm shadow-sm border border-gray-200 overflow-hidden flex flex-col group hover:shadow-md transition-shadow !no-underline"
+                >
                   
                   {/* Nửa trên: Hình ảnh & Tag */}
                   <div className="h-44 md:h-52 relative overflow-hidden bg-gray-200">
@@ -120,10 +125,16 @@ const CourtPage = () => {
 
                     {/* Các nút tương tác góc phải */}
                     <div className="absolute top-3 right-3 flex gap-2">
-                      <button className="bg-white rounded-sm p-2 shadow-sm text-gray-600 hover:text-red-500 transition-colors border-none cursor-pointer flex items-center justify-center">
+                      <button 
+                        onClick={(e) => e.preventDefault()} // Ngăn chặn chuyển trang khi bấm tym
+                        className="bg-white rounded-sm p-2 shadow-sm text-gray-600 hover:text-red-500 transition-colors border-none cursor-pointer flex items-center justify-center"
+                      >
                         <Heart size={16} />
                       </button>
-                      <button className="bg-white rounded-sm p-2 shadow-sm text-gray-600 hover:text-blue-500 transition-colors border-none cursor-pointer flex items-center justify-center">
+                      <button 
+                        onClick={(e) => e.preventDefault()} // Ngăn chặn chuyển trang khi bấm share
+                        className="bg-white rounded-sm p-2 shadow-sm text-gray-600 hover:text-blue-500 transition-colors border-none cursor-pointer flex items-center justify-center"
+                      >
                         <Share2 size={16} />
                       </button>
                     </div>
@@ -145,8 +156,8 @@ const CourtPage = () => {
                     </div>
                     
                     {/* Thông tin Text */}
-                    <div className="flex-1 min-w-0 pb-10">
-                      <h3 className="font-bold text-gray-800 text-[16px] leading-tight mb-1 truncate" title={court.name}>
+                    <div className="flex-1 min-w-0 pb-10 text-gray-800">
+                      <h3 className="font-bold text-[16px] leading-tight mb-1 truncate group-hover:text-[#eb5322] transition-colors" title={court.name}>
                         {court.name}
                       </h3>
                       
@@ -162,13 +173,18 @@ const CourtPage = () => {
 
                     {/* Góc dưới bên phải: Nút Đặt lịch */}
                     <div className="absolute bottom-4 right-4 flex flex-col items-end">
-                      <button className="bg-[#f0ad4e] hover:bg-[#e09d3e] text-white font-bold py-2 px-5 rounded-sm text-[13px] border-none cursor-pointer transition-colors shadow-sm relative z-20">
+                      <button 
+                        onClick={(e) => {
+                          // Nếu muốn logic đặc biệt khi click đặt lịch ngay thì xử lý ở đây
+                        }}
+                        className="bg-[#f0ad4e] hover:bg-[#e09d3e] text-white font-bold py-2 px-5 rounded-sm text-[13px] border-none cursor-pointer transition-colors shadow-sm relative z-20"
+                      >
                         ĐẶT LỊCH
                       </button>
                     </div>
 
                   </div>
-                </div>
+                </Link>
               );
             })}
           </div>
