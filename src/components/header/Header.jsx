@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
-// --- DATA MEGA MENU TÁI TẠO CHÍNH XÁC THEO HÌNH ẢNH ---
+// --- DATA MEGA MENU ---
 const MENU_DATA = [
   {
     main: "Vợt Cầu Lông",
@@ -212,7 +212,6 @@ const Header = () => {
     const [searchValue, setSearchValue] = useState('');
     const navigate = useNavigate();
 
-    // Thay thế Mock data bằng dữ liệu thực từ API
     const [cartItems, setCartItems] = useState([]);
     const [totalPrice, setTotalPrice] = useState(0);
 
@@ -220,11 +219,10 @@ const Header = () => {
       const token = localStorage.getItem('token');
       setIsLoggedIn(!!token);
       if (token) {
-        fetchCart(); // Gọi 1 lần lúc mount để lấy số badge
+        fetchCart(); 
       }
     }, []);
 
-    // HÀM GỌI API LẤY GIỎ HÀNG
     const fetchCart = async () => {
       const token = localStorage.getItem('token');
       if (!token) return;
@@ -283,7 +281,6 @@ const Header = () => {
       return price ? Number(price).toLocaleString('vi-VN') + ' ₫' : '0 ₫';
     };
 
-    // Hàm gọi khi di chuột vào icon giỏ hàng để luôn làm mới dữ liệu
     const handleCartHover = () => {
       if (isLoggedIn) {
         fetchCart();
@@ -381,17 +378,15 @@ const Header = () => {
               </div>
             </div>
 
-            {/* NÚT GIỎ HÀNG */}
             <div 
               className="flex flex-col items-center cursor-pointer group relative"
-              onMouseEnter={handleCartHover} // Gọi API khi di chuột vào
+              onMouseEnter={handleCartHover}
             >
               <div 
                 onClick={() => { navigate('/cart'); handleActionComplete(); }}
                 className="!bg-gray-100 p-2 rounded-full mb-1 group-hover:!bg-orange-50 relative"
               >
                  <ShoppingCart size={20} className="!text-gray-600 group-hover:!text-[#eb5322]" />
-                 {/* Số lượng badge */}
                  {cartItems.length > 0 && (
                    <span className="absolute -top-1 -right-1 !bg-[#eb5322] !text-white text-[10px] font-bold h-4 w-4 flex items-center justify-center rounded-full border border-white">
                      {cartItems.length}
@@ -400,7 +395,6 @@ const Header = () => {
               </div>
               <span className="text-[10px] uppercase font-semibold !text-gray-600 group-hover:!text-[#eb5322]">Giỏ hàng</span>
 
-              {/* DROPDOWN GIỎ HÀNG */}
               <div className={`hidden ${forceCloseMenu ? '' : 'group-hover:block'} absolute top-full right-0 w-[320px] pt-2 z-[9999]`}>
                 <div className="!bg-white border border-gray-200 shadow-2xl rounded-sm overflow-hidden">
                   <div className="!bg-[#eb5322] !text-white text-[11px] font-bold px-3 py-2 uppercase">
@@ -437,14 +431,10 @@ const Header = () => {
                               {hasSize && (
                                 <p className="text-[10px] text-gray-400 mb-2">Size: {displaySize}</p>
                               )}
-                              
-                              {/* Thông tin số lượng x Giá */}
                               <div className="text-[10px] text-gray-500 mt-1">
                                 {item.quantity} x <span className="font-bold text-[#eb5322]">{formatPrice(item.price)}</span>
                               </div>
                             </div>
-                            
-                            {/* Xóa sản phẩm khỏi mini cart - có thể redirect vào cart page để người dùng thao tác dễ hơn */}
                             <div className="flex flex-col items-end justify-between">
                               <span className="text-[11px] font-bold !text-[#eb5322] whitespace-nowrap mt-auto pb-1">
                                 {formatPrice(item.price * item.quantity)}
@@ -483,7 +473,7 @@ const Header = () => {
     const navItems = [
       { label: 'TRANG CHỦ', link: "/" },
       { label: 'SẢN PHẨM', hasDropdown: true, link: "#" },
-      { label: 'SALE OFF', link: "#" },
+      { label: 'HỆ THỐNG SÂN', link: "/courts" }, // Đổi từ SALE OFF thành HỆ THỐNG SÂN
       { label: 'TIN TỨC', link: "#" },
       { label: 'CHÍNH SÁCH NHƯỢNG QUYỀN', link: "#" },
       { label: 'HƯỚNG DẪN', hasDropdown: true, link: "#" },
@@ -506,7 +496,6 @@ const Header = () => {
                   {item.hasDropdown && <ChevronDown size={14} className="ml-1 opacity-70" />}
                 </Link>
 
-                {/* MEGA MENU CHO "SẢN PHẨM" - TRÀN VIỀN 100% & GIẢM CHIỀU CAO */}
                 {item.label === 'SẢN PHẨM' && (
                   <div className={`absolute top-full left-0 w-full !bg-white shadow-2xl border-t border-gray-100 z-[9999] ${forceCloseMenu ? 'hidden' : 'hidden group-hover:block'}`}>
                     <div className="w-full px-8 py-6 grid grid-cols-5 gap-x-10 gap-y-10 max-h-[65vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300">

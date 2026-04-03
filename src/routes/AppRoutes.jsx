@@ -14,6 +14,8 @@ import ResetPassworPage from "../modules/auth/pages/ResetPassworPage";
 import SearchPage from "../modules/auth/pages/SearchPage";
 import CheckoutPage from "../modules/auth/pages/CheckoutPage";
 import OrderDetailPage from "../modules/auth/pages/OrderDetailPage";
+import CourtPage from "../modules/auth/pages/CourtPage";
+
 
 
 
@@ -32,6 +34,8 @@ const AppRoutes = () => {
         <Route path="/product-detail/:id" element={<MainLayout><ProductDetailPage /></MainLayout>} />
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/order-detail/:id" element={<MainLayout><OrderDetailPage /></MainLayout>} />
+        <Route path="/courts" element={<CourtPage />} />
+
 
 
       </Routes>
