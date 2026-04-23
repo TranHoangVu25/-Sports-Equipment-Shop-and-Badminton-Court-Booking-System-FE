@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { Check, Loader2, AlertCircle } from 'lucide-react';
+import { decodeId, encodeId } from '../../../utils/url';
 
 const OrderDetailPage = () => {
-  const { id } = useParams(); // Lấy ID đơn hàng từ URL
+  const { id: encodedId } = useParams(); // Lấy ID đơn hàng từ URL
+  const id = decodeId(encodedId);
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [orderData, setOrderData] = useState(null);
@@ -212,7 +214,7 @@ const OrderDetailPage = () => {
                         />
                       </div>
                       <div className="flex-1">
-                        <Link to={`/product-detail/${item.id}`} className="no-underline">
+                        <Link to={`/product-detail/${encodeId(item.id)}`} className="no-underline">
                           <h3 className="text-[14px] text-gray-800 font-medium leading-snug mb-1 m-0 hover:text-[#eb5322] transition-colors">
                             {item.name}
                           </h3>

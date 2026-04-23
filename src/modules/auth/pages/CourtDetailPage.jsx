@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Heart, Share2, Star, MapPin, Clock, Phone, Loader2, Info, CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { decodeId } from '../../../utils/url';
 
 // =======================================================================
 // COMPONENT CUSTOM DATEPICKER (CHỈ CHO CHỌN THÁNG NÀY VÀ THÁNG SAU)
@@ -421,7 +422,7 @@ const BookingTimeline = ({ court, onBack }) => {
     <>
       <div className="fixed inset-0 z-[9999] bg-[#f0f4f8] flex flex-col font-sans overflow-hidden">
         
-        {/* Header màu cam đồng bộ VNB */}
+        {/* Header màu cam đồng bộ MATHMORE */}
         <div className="bg-[#eb5322] text-white px-4 py-4 flex items-center justify-between relative shadow-md z-10">
           <button onClick={onBack} className="text-white hover:text-gray-200 bg-transparent border-none cursor-pointer p-1">
             <ChevronLeft size={28} strokeWidth={2.5} />
@@ -601,7 +602,8 @@ const BookingTimeline = ({ court, onBack }) => {
 // TRANG CHI TIẾT SÂN CHÍNH
 // =======================================================================
 const CourtDetailPage = () => {
-  const { id } = useParams();
+  const { id: encodedId } = useParams();
+  const id = decodeId(encodedId);
   const [court, setCourt] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);

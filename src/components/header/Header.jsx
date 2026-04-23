@@ -187,7 +187,7 @@ const Logo = () => (
       <path d="M20 20 L40 60 L60 20 Z" fill="black" />
       <path d="M40 80 L60 40 L80 80 Z" fill="black" />
     </svg>
-    <span className="font-extrabold text-2xl tracking-tighter !text-gray-900">VNB</span>
+    <span className="font-extrabold text-2xl tracking-tighter !text-gray-900">MATHMORE </span>
   </div>
 );
 

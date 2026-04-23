@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { ChevronRight, Filter, Search as SearchIcon, SlidersHorizontal, X, Loader2 } from 'lucide-react';
+import { encodeId } from '../../../utils/url';
 
 // --- CONSTANTS & MAPPING ---
 const MENU_DATA = [
@@ -623,40 +624,13 @@ const SearchPage = () => {
                 const isOutOfStock = product.status && product.status.toLowerCase() === 'hết hàng';
 
                 return (
-                  <Link to={`/product-detail/${product.productId}`} key={product.productId} className="!no-underline block">
+                  <Link to={`/product-detail/${encodeId(product.productId)}`} key={product.productId} className="!no-underline block">
                     <div className="bg-white border border-gray-100 rounded-sm hover:shadow-xl transition-shadow h-full flex flex-col p-3 relative group">
                       
-                      {/* Tag Premium - Đã dời sang TRÁI để chừa chỗ cho Trạng thái */}
+                      {/* Tag Premium */}
                       {isPremium && (
                         <div className={`absolute top-3 left-3 z-10 text-[10px] font-bold px-2 py-0.5 rounded-sm uppercase tracking-wide ${isOutOfStock ? '!bg-gray-400 !text-white' : '!bg-[#eb5322] !text-white'}`}>
                           Premium
-                        </div>
-                      )}
-
-                      {/* Tag Trạng Thái (Còn hàng / Hết hàng) - Thiết kế cao cấp ở GÓC PHẢI */}
-                      {product.status && (
-                        <div className="absolute top-3 right-3 z-10">
-                          {product.status.toLowerCase() === 'còn hàng' ? (
-                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50/95 backdrop-blur-sm border border-emerald-100 shadow-sm">
-                              <div className="relative flex h-1.5 w-1.5">
-                                {/* Hiệu ứng nhịp đập Pulse thu hút sự chú ý */}
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-50"></span>
-                                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
-                              </div>
-                              <span className="text-[9px] font-bold text-emerald-600 uppercase tracking-wider mt-px">
-                                Còn hàng
-                              </span>
-                            </div>
-                          ) : (
-                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gray-50/95 backdrop-blur-sm border border-gray-200 shadow-sm">
-                              <div className="relative flex h-1.5 w-1.5">
-                                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-gray-400"></span>
-                              </div>
-                              <span className="text-[9px] font-bold text-gray-500 uppercase tracking-wider mt-px">
-                                Hết hàng
-                              </span>
-                            </div>
-                          )}
                         </div>
                       )}
                       
