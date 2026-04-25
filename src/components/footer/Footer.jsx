@@ -12,8 +12,8 @@ const FooterContent = () => {
           <div>
             <h3 className="!text-white text-base font-bold uppercase mb-6 tracking-wide">Thông tin chung</h3>
             <div className="space-y-4 text-sm leading-relaxed">
-              <p><span className="!text-[#eb5322] font-bold">VNB Sports</span> là hệ thống cửa hàng cầu lông, pickleball với hơn 80 chi nhánh trên toàn quốc, cung cấp sỉ và lẻ các mặt hàng dụng cụ cầu lông, pickleball từ phong trào tới chuyên nghiệp</p>
-              <p><span className="!text-[#eb5322] font-bold">Với sứ mệnh:</span> "VNB cam kết mang đến những sản phẩm, dịch vụ chất lượng tốt nhất phục vụ cho người chơi thể thao để nâng cao sức khỏe của chính mình."</p>
+              <p><span className="!text-[#eb5322] font-bold">MATHMORE Sports</span> là hệ thống cửa hàng cầu lông, pickleball với hơn 80 chi nhánh trên toàn quốc, cung cấp sỉ và lẻ các mặt hàng dụng cụ cầu lông, pickleball từ phong trào tới chuyên nghiệp</p>
+              <p><span className="!text-[#eb5322] font-bold">Với sứ mệnh:</span> "MATHMORE cam kết mang đến những sản phẩm, dịch vụ chất lượng tốt nhất phục vụ cho người chơi thể thao để nâng cao sức khỏe của chính mình."</p>
               <p><span className="!text-[#eb5322] font-bold">Tầm nhìn:</span> "Trở thành nhà phân phối và sản xuất thể thao lớn nhất Việt Nam"</p>
             </div>
           </div>

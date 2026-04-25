@@ -227,7 +227,7 @@ const CheckoutPage = () => {
         {/* ========================================== */}
         <div className="flex-[2] p-4 md:p-8 lg:pr-10 pt-8">
           <Link to="/" className="inline-block mb-8 no-underline">
-            <h1 className="text-[32px] font-normal text-[#eb5322] m-0 tracking-tight">VNBSports</h1>
+            <h1 className="text-[32px] font-normal text-[#eb5322] m-0 tracking-tight">MATHMORE </h1>
           </Link>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-10">
@@ -454,7 +454,7 @@ const CheckoutPage = () => {
 
           <div className="border-t border-gray-200 my-4"></div>
 
-          <div className="flex gap-2 mb-6">
+          {/* <div className="flex gap-2 mb-6">
             <input 
               type="text" 
               placeholder="Mã giảm giá" 
@@ -463,9 +463,9 @@ const CheckoutPage = () => {
             <button className="bg-[#5bc0de] hover:bg-[#46b8da] text-white px-5 py-2.5 rounded-sm text-[13px] font-medium transition-colors border-none cursor-pointer">
               Sử dụng
             </button>
-          </div>
+          </div> */}
 
-          <div className="border-t border-gray-200 my-4"></div>
+          {/* <div className="border-t border-gray-200 my-4"></div> */}
 
           <div className="flex justify-between items-center mb-8">
             <span className="text-[15px] text-gray-600">Tổng cộng</span>

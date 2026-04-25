@@ -11,6 +11,7 @@ import {
   AlertCircle,
   X
 } from 'lucide-react';
+import { decodeId } from '../../../utils/url';
 
 // Dữ liệu danh mục ở cột bên phải theo ảnh thiết kế
 const CATEGORIES_SIDEBAR = [
@@ -27,7 +28,8 @@ const formatPrice = (price) => {
 
 const ProductDetailPage = () => {
   // Lấy ID sản phẩm từ URL (Bắt buộc route phải khai báo là /product-detail/:id)
-  const { id } = useParams(); 
+  const { id: encodedId } = useParams();
+  const id = decodeId(encodedId);
   const navigate = useNavigate();
   
   const [product, setProduct] = useState(null);
@@ -308,17 +310,9 @@ const ProductDetailPage = () => {
               <p>Mã: <span className="text-[#eb5322] font-medium">{product?.productId}</span></p>
               <p>Thương hiệu: <span className="text-[#eb5322] font-medium">{product?.brand || 'Đang cập nhật'}</span></p>
               <div className="flex items-center gap-1.5">Tình trạng: 
-                {!isOutOfStock ? (
-                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-100 text-[11px] font-bold text-emerald-600 uppercase tracking-wide">
-                    <span className="relative flex h-1.5 w-1.5"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-50"></span><span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span></span>
-                    {product?.status || 'Còn hàng'}
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-gray-50 border border-gray-200 text-[11px] font-bold text-gray-500 uppercase tracking-wide">
-                    <span className="relative flex h-1.5 w-1.5 bg-gray-400 rounded-full"></span>
-                    {product?.status || 'Hết hàng'}
-                  </span>
-                )}
+                <span className="text-[#eb5322] font-medium">
+                  {product?.status || (isOutOfStock ? 'Hết hàng' : 'Còn hàng')}
+                </span>
               </div>
             </div>
 

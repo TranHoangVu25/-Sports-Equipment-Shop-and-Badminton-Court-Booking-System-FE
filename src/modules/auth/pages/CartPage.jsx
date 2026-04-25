@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ChevronRight, Minus, Plus, ShoppingCart, X, Loader2, AlertCircle } from 'lucide-react';
+import { encodeId } from '../../../utils/url';
 
 /**
  * COMPONENT: CartForm
@@ -48,7 +49,7 @@ const CartForm = ({ cartItems, updateQuantity, removeItem, totalPrice, formatPri
                   </button>
 
                   {/* Hình ảnh sản phẩm */}
-                  <Link to={`/product-detail/${item.productId}`} className="w-24 h-24 flex-shrink-0 flex items-center justify-center bg-white border border-gray-50 p-1 block">
+                  <Link to={`/product-detail/${encodeId(item.productId)}`} className="w-24 h-24 flex-shrink-0 flex items-center justify-center bg-white border border-gray-50 p-1 block">
                     <img 
                       src={item.image || 'https://via.placeholder.com/100x100?text=No+Image'} 
                       alt={item.name} 
@@ -58,7 +59,7 @@ const CartForm = ({ cartItems, updateQuantity, removeItem, totalPrice, formatPri
 
                   {/* Thông tin tên và size */}
                   <div className="flex-1">
-                    <Link to={`/product-detail/${item.productId}`} className="no-underline">
+                    <Link to={`/product-detail/${encodeId(item.productId)}`} className="no-underline">
                       <h3 className="text-[14px] font-medium !text-gray-800 mb-1.5 leading-snug pr-8 hover:!text-[#eb5322] transition-colors">
                         {item.name}
                       </h3>

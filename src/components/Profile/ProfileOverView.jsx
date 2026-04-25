@@ -1,10 +1,8 @@
 import { Loader2, MapPin, Phone, User } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { encodeId } from '../../utils/url';
 
-// =======================================================================
-// 1. MÀN HÌNH TỔNG QUAN (ProfileOverView)
-// =======================================================================
 const ProfileOverView = ({ userData, onEdit }) => {
   const nameDisplay = userData?.fullName || 'Chưa cập nhật';
   const phoneDisplay = userData?.phoneNumber || 'Chưa cập nhật';
@@ -67,18 +65,25 @@ const ProfileOverView = ({ userData, onEdit }) => {
 
   const translateStatus = (status) => {
     switch (status?.toLowerCase()) {
-      case 'pending': 
-        return <span className="text-orange-500 font-medium bg-orange-50 px-2 py-1 rounded text-xs border border-orange-100">Chờ xử lý</span>;
+      case 'success':
+        return <span className="text-gray-800">Thành công</span>;
+      case 'process':
       case 'processing': 
-        return <span className="text-blue-500 font-medium bg-blue-50 px-2 py-1 rounded text-xs border border-blue-100">Đang xử lý</span>;
-      case 'shipped': 
-        return <span className="text-indigo-500 font-medium bg-indigo-50 px-2 py-1 rounded text-xs border border-indigo-100">Đang giao</span>;
-      case 'delivered': 
-        return <span className="text-green-600 font-medium bg-green-50 px-2 py-1 rounded text-xs border border-green-100">Đã giao</span>;
+        return <span className="text-gray-800">Đang xử lý</span>;
+      case 'failure':
+      case 'failed':
       case 'cancelled': 
-        return <span className="text-red-500 font-medium bg-red-50 px-2 py-1 rounded text-xs border border-red-100">Đã hủy</span>;
+        return <span className="text-gray-800">Thất bại</span>;
+      case 'pending': 
+        return <span className="text-gray-800">Chờ xử lý</span>;
+      case 'shipped': 
+        return <span className="text-gray-800">Đang giao</span>;
+      case 'delivered': 
+        return <span className="text-gray-800">Đã giao</span>;
       default: 
-        return <span className="text-gray-500 bg-gray-50 px-2 py-1 rounded text-xs border border-gray-200">{status}</span>;
+        if (!status) return null;
+        const capitalized = status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+        return <span className="text-gray-800">{capitalized}</span>;
     }
   };
 
@@ -176,7 +181,7 @@ const ProfileOverView = ({ userData, onEdit }) => {
                       <tr key={order.orderId} className="hover:bg-orange-50/30 transition-colors cursor-default">
                         <td className="py-3.5 px-3 border-r border-gray-100 text-center font-medium">
                           <Link 
-                            to={`/order-detail/${getOrderId(order.orderId)}`} 
+                            to={`/order-detail/${encodeId(getOrderId(order.orderId))}`} 
                             className="text-[#eb5322] font-bold hover:underline hover:text-[#d04316] transition-colors !no-underline"
                           >
                             #{getOrderId(order.orderId)}

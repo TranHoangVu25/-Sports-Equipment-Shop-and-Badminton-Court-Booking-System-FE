@@ -5,6 +5,8 @@ import {
   ShoppingBag
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom'; // <-- ĐÃ THÊM IMPORT NÀY
+import { encodeId } from '../../utils/url';
 
 const TABS = ['Tất cả', 'Vợt Cầu Lông', 'Giày Cầu Lông', 'Áo Cầu Lông', 'Váy cầu lông', 'Quần Cầu Lông'];
 
@@ -114,24 +116,27 @@ const ProductTabsSection = () => {
               key={product.productId} 
               className="w-full sm:w-1/2 md:w-1/3 lg:w-1/5 flex-shrink-0 snap-start p-3"
             >
-              <div className="bg-white border border-transparent hover:border-gray-200 rounded-sm hover:shadow-lg transition-all h-full flex flex-col p-2 cursor-pointer group/item">
-                <div className="relative mb-3 aspect-square overflow-hidden flex items-center justify-center">
-                  <img 
-                    src={product.imgUrl} 
-                    alt={product.name} 
-                    className="w-full h-auto object-contain group-hover/item:scale-105 transition-transform duration-300" 
-                    onError={(e) => { e.target.src = 'https://via.placeholder.com/300x300?text=No+Image'; }}
-                  />
+              {/* ĐÃ BỌC THẺ LINK ĐỂ CHUYỂN HƯỚNG TỚI TRANG CHI TIẾT */}
+              <Link to={`/product-detail/${encodeId(product.productId)}`} className="!no-underline block h-full">
+                <div className="bg-white border border-transparent hover:border-gray-200 rounded-sm hover:shadow-lg transition-all h-full flex flex-col p-2 cursor-pointer group/item">
+                  <div className="relative mb-3 aspect-square overflow-hidden flex items-center justify-center">
+                    <img 
+                      src={product.imgUrl} 
+                      alt={product.name} 
+                      className="w-full h-auto object-contain group-hover/item:scale-105 transition-transform duration-300" 
+                      onError={(e) => { e.target.src = 'https://via.placeholder.com/300x300?text=No+Image'; }}
+                    />
+                  </div>
+                  <h3 className="text-sm font-medium !text-gray-800 line-clamp-2 mb-2 group-hover/item:!text-[#eb5322] transition-colors font-sans" title={product.name}>
+                    {product.name}
+                  </h3>
+                  <div className="mt-auto">
+                    <span className="text-sm font-bold !text-red-500 font-sans">
+                      {product.price.toLocaleString('vi-VN')} ₫
+                    </span>
+                  </div>
                 </div>
-                <h3 className="text-sm font-medium !text-gray-800 line-clamp-2 mb-2 group-hover/item:!text-[#eb5322] transition-colors font-sans" title={product.name}>
-                  {product.name}
-                </h3>
-                <div className="mt-auto">
-                  <span className="text-sm font-bold !text-red-500 font-sans">
-                    {product.price.toLocaleString('vi-VN')} ₫
-                  </span>
-                </div>
-              </div>
+              </Link>
             </div>
           ))}
           
@@ -156,4 +161,4 @@ const ProductTabsSection = () => {
   );
 };
 
-export default ProductTabsSection; 
+export default ProductTabsSection;
