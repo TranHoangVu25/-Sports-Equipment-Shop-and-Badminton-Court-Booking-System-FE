@@ -16,6 +16,8 @@ import CheckoutPage from "../modules/auth/pages/CheckoutPage";
 import OrderDetailPage from "../modules/auth/pages/OrderDetailPage";
 import CourtPage from "../modules/auth/pages/CourtPage";
 import CourtDetailPage from "../modules/auth/pages/CourtDetailPage";
+import CourtCheckoutPage from "../modules/auth/pages/CourtCheckoutPage";
+
 
 const AppRoutes = () => {
   return (
@@ -34,7 +36,7 @@ const AppRoutes = () => {
         <Route path="/order-detail/:id" element={<MainLayout><OrderDetailPage /></MainLayout>} />
         <Route path="/courts" element={<CourtPage />} />
         <Route path="/court-detail/:id" element={<CourtDetailPage />} />
-
+        <Route path="/court-checkout" element={<CourtCheckoutPage />} />
       </Routes>
     </BrowserRouter>
   );

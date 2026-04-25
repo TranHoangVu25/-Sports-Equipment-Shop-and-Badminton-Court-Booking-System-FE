@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, SlidersHorizontal, MapPin, XCircle, Heart, Share2, Clock, Star, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { encodeId } from '../../../utils/url';
 
 const CourtPage = () => {
   const [courts, setCourts] = useState([]);
@@ -96,7 +95,7 @@ const CourtPage = () => {
               return (
                 // Bọc toàn bộ Card bằng Link để chuyển sang trang chi tiết
                 <Link 
-                  to={`/court-detail/${encodeId(court.courtCenterId)}`}
+                  to={`/court-detail/${court.courtCenterId}`}
                   key={court.courtCenterId} 
                   className="bg-white rounded-sm shadow-sm border border-gray-200 overflow-hidden flex flex-col group hover:shadow-md transition-shadow !no-underline"
                 >
