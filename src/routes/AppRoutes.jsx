@@ -18,6 +18,12 @@ import CourtPage from "../modules/auth/pages/CourtPage";
 import CourtDetailPage from "../modules/auth/pages/CourtDetailPage";
 import CourtCheckoutPage from "../modules/auth/pages/CourtCheckoutPage";
 import BookingDetailPage from "../modules/auth/pages/BookingDetailPage";
+import { ChatbotDashboard } from "../dashboard/chatbot";
+import { UserDashBoard } from "../dashboard/user";
+import { ProductDashBoard } from "../dashboard/products";
+import { MainDashBoard } from "../dashboard/main-dashboard";
+import { OrderDashBoard } from "../dashboard/orders";
+import { PromotionsDashBoard } from "../dashboard/promotions";
 
 
 
@@ -40,6 +46,14 @@ const AppRoutes = () => {
         <Route path="/court-detail/:id" element={<CourtDetailPage />} />
         <Route path="/court-checkout" element={<CourtCheckoutPage />} />
         <Route path="/booking-detail/:id" element={<MainLayout><BookingDetailPage /></MainLayout>} />
+
+        <Route element={<ChatbotDashboard />} path="/dashboard/chatbot" />
+      <Route element={<UserDashBoard />} path="/dashboard/users" />
+      <Route element={<ProductDashBoard />} path="/dashboard/products" />
+      <Route element={<MainDashBoard />} path="/dashboard/main" />
+      <Route element={<OrderDashBoard />} path="/dashboard/orders" />
+      <Route element={<PromotionsDashBoard />} path="/dashboard/promotions" />
+      
       </Routes>
     </BrowserRouter>
   );
