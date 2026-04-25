@@ -17,6 +17,8 @@ import OrderDetailPage from "../modules/auth/pages/OrderDetailPage";
 import CourtPage from "../modules/auth/pages/CourtPage";
 import CourtDetailPage from "../modules/auth/pages/CourtDetailPage";
 import CourtCheckoutPage from "../modules/auth/pages/CourtCheckoutPage";
+import BookingDetailPage from "../modules/auth/pages/BookingDetailPage";
+
 
 
 const AppRoutes = () => {
@@ -37,6 +39,7 @@ const AppRoutes = () => {
         <Route path="/courts" element={<CourtPage />} />
         <Route path="/court-detail/:id" element={<CourtDetailPage />} />
         <Route path="/court-checkout" element={<CourtCheckoutPage />} />
+        <Route path="/booking-detail/:id" element={<MainLayout><BookingDetailPage /></MainLayout>} />
       </Routes>
     </BrowserRouter>
   );
