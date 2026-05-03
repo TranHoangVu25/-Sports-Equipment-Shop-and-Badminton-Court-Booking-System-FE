@@ -1,70 +1,85 @@
 import React, { useState, useEffect, useRef } from "react";
 import { 
   Filter, 
-  Download, 
-  RotateCcw, 
-  Search, 
-  CheckCircle2, 
-  XCircle, 
-  MoreHorizontal,
-  Calendar,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
   Eye,
   RefreshCcw,
-  Trash2,
   Check,
   X,
-  Loader2
+  Loader2,
+  Package,
+  XCircle,
+  AlertCircle,
+  CheckCircle2,
+  Search
 } from "lucide-react";
-import { MainLayout } from "../dashboard/layouts/main-layout";
+import { MainLayout } from "../dashboard/layouts/main-layout"; 
 
+// --- Toast Notification Component ---
+const ToastNotification = ({ message, type, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
 
-// --- Order Detail Modal (Light Theme) ---
+  const bgColor = type === 'success' ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200';
+  const textColor = type === 'success' ? 'text-emerald-800' : 'text-red-800';
+  const Icon = type === 'success' ? CheckCircle2 : AlertCircle;
+  const iconColor = type === 'success' ? 'text-emerald-500' : 'text-red-500';
+
+  return (
+    <div className={`fixed top-24 right-5 z-[9999] flex items-center p-4 mb-4 rounded-lg border shadow-xl transform transition-all duration-500 ease-in-out animate-in slide-in-from-top-5 ${bgColor}`}>
+      <Icon className={`w-5 h-5 mr-3 ${iconColor}`} />
+      <div className={`text-sm font-medium ${textColor}`}>{message}</div>
+      <button onClick={onClose} className={`ml-auto -mx-1.5 -my-1.5 rounded-lg p-1.5 inline-flex h-8 w-8 ${textColor} hover:bg-white/50 transition-colors border-none cursor-pointer bg-transparent`}>
+        <X className="w-4 h-4" />
+      </button>
+    </div>
+  );
+};
+
+// --- Order Detail Modal ---
 const OrderDetailModal = ({ order, isOpen, onClose }) => {
   if (!isOpen || !order) return null;
 
+  const formatVND = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200 text-slate-900 font-sans">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200 text-slate-900 font-sans flex flex-col max-h-[90vh]">
         
         {/* Modal Header */}
-        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-          <h3 className="text-lg font-bold text-slate-800">Order Details</h3>
-          <button onClick={onClose} className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
+        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 shrink-0">
+          <h3 className="text-lg font-bold text-slate-800">Chi tiết đơn hàng</h3>
+          <button onClick={onClose} className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors border-none bg-transparent cursor-pointer">
             <X size={20} />
           </button>
         </div>
 
         {/* Modal Body */}
-        <div className="p-6 space-y-8 max-h-[70vh] overflow-y-auto">
+        <div className="p-6 space-y-8 flex-1 overflow-y-auto custom-scrollbar">
           
           {/* Section 1: Order Info */}
           <div>
-            <h4 className="text-sm font-bold text-slate-800 mb-4">Order Information</h4>
+            <h4 className="text-sm font-bold text-slate-800 mb-4">Thông tin chung</h4>
             <div className="grid grid-cols-3 gap-6">
-              <div className="col-span-1 md:col-span-1">
-                <p className="text-xs text-slate-500 uppercase font-semibold mb-1">Order ID:</p>
-                <p className="text-sm font-medium text-slate-900 truncate" title={order.id}>{order.id}</p>
+              <div className="col-span-2 md:col-span-1">
+                <p className="text-xs text-slate-500 uppercase font-semibold mb-1">Mã đơn hàng:</p>
+                <p className="text-sm font-bold text-[#eb5322] truncate" title={order.id}>#{order.id}</p>
               </div>
-              <div>
-                <p className="text-xs text-slate-500 uppercase font-semibold mb-1">Date:</p>
+              <div className="col-span-1">
+                <p className="text-xs text-slate-500 uppercase font-semibold mb-1">Ngày đặt:</p>
                 <p className="text-sm font-medium text-slate-900">{order.date}</p>
               </div>
-              <div>
-                <p className="text-xs text-slate-500 uppercase font-semibold mb-1">Status:</p>
-                <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-bold ${
-                  order.status === 'Success' ? 'bg-emerald-100 text-emerald-700' :
-                  order.status === 'Pending' ? 'bg-amber-100 text-amber-700' :
-                  'bg-red-100 text-red-700'
-                }`}>
+              <div className="col-span-3 md:col-span-1">
+                <p className="text-xs text-slate-500 uppercase font-semibold mb-1">Trạng thái:</p>
+                <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold ${order.statusColor}`}>
                   {order.status}
                 </span>
-              </div>
-              <div className="col-span-3 mt-2">
-                <p className="text-xs text-slate-500 uppercase font-semibold mb-1">Total Amount:</p>
-                <p className="text-lg font-bold text-indigo-600">{order.total}</p>
               </div>
             </div>
           </div>
@@ -73,44 +88,80 @@ const OrderDetailModal = ({ order, isOpen, onClose }) => {
 
           {/* Section 2: Customer Info */}
           <div>
-            <h4 className="text-sm font-bold text-slate-800 mb-4">Customer Information</h4>
-            <div className="grid grid-cols-3 gap-6">
+            <h4 className="text-sm font-bold text-slate-800 mb-4">Thông tin giao hàng</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <p className="text-xs text-slate-500 uppercase font-semibold mb-1">Full Name:</p>
+                <p className="text-xs text-slate-500 uppercase font-semibold mb-1">Người nhận:</p>
                 <p className="text-sm font-medium text-slate-900">{order.customer}</p>
               </div>
               <div>
-                <p className="text-xs text-slate-500 uppercase font-semibold mb-1">Email:</p>
-                <p className="text-sm font-medium text-slate-700">{order.email}</p>
-              </div>
-              <div>
-                <p className="text-xs text-slate-500 uppercase font-semibold mb-1">Phone Number:</p>
+                <p className="text-xs text-slate-500 uppercase font-semibold mb-1">Số điện thoại:</p>
                 <p className="text-sm font-medium text-slate-900">{order.phone}</p>
+              </div>
+              <div className="md:col-span-2">
+                <p className="text-xs text-slate-500 uppercase font-semibold mb-1">Địa chỉ giao hàng:</p>
+                <p className="text-sm font-medium text-slate-700">{order.location}</p>
               </div>
             </div>
           </div>
 
           <div className="h-px bg-slate-100"></div>
 
-          {/* Section 3: Product Details (Extended for Modal) */}
+          {/* Section 3: Product Details */}
           <div>
-            <h4 className="text-sm font-bold text-slate-800 mb-4">Product Details</h4>
-            <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
-              <div className="grid grid-cols-1 gap-4">
-                 <div className="flex flex-col gap-1">
-                    <p className="text-xs text-slate-500 uppercase font-semibold">Product Name(s):</p>
-                    <p className="text-sm font-bold text-slate-900">{order.productName}</p>
-                 </div>
-                 <div className="grid grid-cols-2 gap-4">
-                    <div>
-                        <p className="text-xs text-slate-500 uppercase font-semibold mb-1">Total Quantity:</p>
-                        <p className="text-sm font-medium text-slate-900">{order.quantity}</p>
+            <h4 className="text-sm font-bold text-slate-800 mb-4 flex items-center justify-between">
+              <span>Danh sách sản phẩm</span>
+              <span className="text-xs font-medium text-slate-500">Tổng SL: {order.quantity}</span>
+            </h4>
+            <div className="bg-slate-50 rounded-lg border border-slate-200 overflow-hidden divide-y divide-slate-200">
+              {order.items && order.items.length > 0 ? (
+                order.items.map((item, idx) => (
+                  <div key={idx} className="p-4 flex gap-4 bg-white items-center">
+                    <div className="w-16 h-16 rounded-md border border-slate-200 bg-white p-1 flex-shrink-0">
+                      <img 
+                        src={item.imgUrl || "https://via.placeholder.com/100x100?text=No+Image"} 
+                        alt={item.productName} 
+                        className="w-full h-full object-contain"
+                        onError={(e) => { e.target.src = 'https://via.placeholder.com/100x100?text=Error'; }}
+                      />
                     </div>
-                    <div>
-                        <p className="text-xs text-slate-500 uppercase font-semibold mb-1">Delivery Address:</p>
-                        <p className="text-sm font-medium text-slate-700">{order.location}</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-slate-800 leading-snug line-clamp-2 mb-1">{item.productName}</p>
+                      <div className="text-xs text-slate-500 flex items-center gap-3">
+                        {item.size && item.size.toLowerCase() !== 'default' && (
+                          <span>Size: <span className="font-medium text-slate-700">{item.size}</span></span>
+                        )}
+                        <span>SL: <span className="font-medium text-slate-700">{item.quantity}</span></span>
+                      </div>
                     </div>
-                 </div>
+                    <div className="text-right flex-shrink-0">
+                      <p className="text-sm font-bold text-slate-800">{formatVND(item.price * item.quantity)}</p>
+                      <p className="text-xs text-slate-400">({formatVND(item.price)}/sp)</p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="p-6 text-center text-slate-500 italic text-sm">Không có chi tiết sản phẩm.</div>
+              )}
+              
+              {/* Giá trị Tạm tính và Giảm giá (nếu có) */}
+              {order.discount && (
+                <>
+                  <div className="px-4 py-3 bg-slate-50 flex items-center justify-between border-t border-slate-200">
+                    <span className="font-semibold text-slate-600 uppercase tracking-wide text-xs">Giá gốc:</span>
+                    <span className="text-sm font-bold text-slate-800">{order.subtotal}</span>
+                  </div>
+                  <div className="px-4 pb-3 bg-slate-50 flex items-center justify-between">
+                    <span className="font-semibold text-slate-600 uppercase tracking-wide text-xs">Giảm giá:</span>
+                    <span className="text-sm font-bold text-red-500">-{order.discount}</span>
+                  </div>
+                </>
+              )}
+
+              {/* Tổng tiền thanh toán */}
+              <div className="p-4 bg-white flex items-center justify-between border-t border-slate-200">
+                <span className="font-bold text-slate-700 uppercase tracking-wide text-sm">Tổng thanh toán:</span>
+                <span className="text-xl font-extrabold text-[#eb5322]">{order.total}</span>
               </div>
             </div>
           </div>
@@ -118,89 +169,13 @@ const OrderDetailModal = ({ order, isOpen, onClose }) => {
         </div>
 
         {/* Modal Footer */}
-        <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/50 flex justify-end gap-3">
-          <button onClick={onClose} className="px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg text-sm font-medium transition-colors shadow-sm">
-            Close
-          </button>
-          <button className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-colors shadow-md shadow-indigo-200">
-            Process Order
+        <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/50 flex justify-end gap-3 shrink-0">
+          <button onClick={onClose} className="px-5 py-2.5 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg text-sm font-medium transition-colors shadow-sm cursor-pointer border-none">
+            Đóng
           </button>
         </div>
 
       </div>
-    </div>
-  );
-};
-
-// --- Helper Component for Dropdown Actions ---
-const ActionMenu = ({ order, onAction }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const menuRef = useRef(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const handleActionClick = (action) => {
-    onAction(action, order);
-    setIsOpen(false);
-  };
-
-  const getActions = () => {
-    switch (order.status) {
-      case 'Pending':
-        return [
-          { label: 'View Details', icon: Eye, action: 'view', color: 'text-slate-600' },
-          { label: 'Confirm Order', icon: Check, action: 'confirm', color: 'text-emerald-600' },
-          { label: 'Cancel Order', icon: XCircle, action: 'cancel', color: 'text-red-600' },
-        ];
-      case 'Cancelled':
-        return [
-          { label: 'View Details', icon: Eye, action: 'view', color: 'text-slate-600' },
-          { label: 'Restore Order', icon: RefreshCcw, action: 'restore', color: 'text-blue-600' },
-        ];
-      case 'Success':
-        return [
-          { label: 'View Details', icon: Eye, action: 'view', color: 'text-slate-600' },
-        ];
-      default:
-        return [
-            { label: 'View Details', icon: Eye, action: 'view', color: 'text-slate-600' },
-        ];
-    }
-  };
-
-  const actions = getActions();
-
-  return (
-    <div className="relative" ref={menuRef}>
-      <button 
-        onClick={() => setIsOpen(!isOpen)}
-        className={`p-2 rounded-lg transition-colors ${isOpen ? 'bg-indigo-50 text-indigo-600' : 'text-slate-400 hover:text-indigo-600 hover:bg-indigo-50'}`}
-      >
-        <MoreHorizontal size={18} />
-      </button>
-
-      {isOpen && (
-        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-slate-200 py-1 z-50 animate-in fade-in zoom-in-95 duration-200">
-          {actions.map((item, index) => (
-            <button
-              key={index}
-              onClick={() => handleActionClick(item.action)}
-              className={`w-full text-left px-4 py-2 text-sm hover:bg-slate-50 flex items-center gap-2 ${item.color}`}
-            >
-              <item.icon size={14} />
-              {item.label}
-            </button>
-          ))}
-        </div>
-      )}
     </div>
   );
 };
@@ -212,149 +187,255 @@ export const OrderDashBoard = () => {
 
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isActionLoading, setIsActionLoading] = useState(false);
   
-  // Pagination State
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10); 
+  // Toast Notification
+  const [toast, setToast] = useState({ show: false, type: 'success', message: '' });
 
-  // --- API CONNECTION ---
-  useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch("https://fearsome-ollie-correspondently.ngrok-free.dev/api/v1/order/all", {
-            headers: {
-                "ngrok-skip-browser-warning": "true",
-                "Content-Type": "application/json",
-            }
-        });
+  // State Tìm kiếm (Input value vs Applied value)
+  const [searchRecipient, setSearchRecipient] = useState("");
+  const [appliedSearchRecipient, setAppliedSearchRecipient] = useState("");
 
-        if (!response.ok) {
-            throw new Error("Failed to fetch orders");
-        }
-
-        const data = await response.json();
-
-        // Check if data is array directly based on user's response example
-        if (Array.isArray(data)) {
-            // Helper to format currency
-            const formatCurrency = (val) => new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY' }).format(val);
-
-            const mappedOrders = data.map(o => {
-                const orderItems = o.orderItems || [];
-                const firstItem = orderItems.length > 0 ? orderItems[0] : null;
-                
-                // Calculate total quantity and amount from items
-                const quantity = orderItems.reduce((acc, item) => acc + (item.quantity || 0), 0);
-                const totalAmount = orderItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-                
-                // Address handling
-                const addr = o.deliveryAddress || {};
-                const locationStr = [addr.locationDetail, addr.city, addr.province, addr.country].filter(Boolean).join(", ");
-
-                // Status Mapping
-                let displayStatus = "Pending";
-                if (o.status === "PAID") displayStatus = "Success";
-                else if (o.status === "CANCELED") displayStatus = "Cancelled";
-                else if (o.status === "PENDING") displayStatus = "Pending";
-                else displayStatus = o.status;
-
-                return {
-                    id: o.id,
-                    customer: addr.recipientName || `User ${o.userId}`,
-                    email: "N/A", // API doesn't provide email directly in this response
-                    phone: addr.phoneNumber || "N/A",
-                    productName: orderItems.length > 0 
-                        ? (orderItems.length > 1 ? `${firstItem.name} (+${orderItems.length - 1} others)` : firstItem.name) 
-                        : "No Items",
-                    category: "General",
-                    quantity: quantity,
-                    total: formatCurrency(totalAmount),
-                    status: displayStatus,
-                    date: o.confirmedAt ? new Date(o.confirmedAt).toLocaleDateString('en-GB') : "N/A",
-                    location: locationStr || "N/A"
-                };
-            });
-            setOrders(mappedOrders);
-        } else {
-            console.error("Unexpected API response format", data);
-            setOrders([]);
-        }
-      } catch (err) {
-        console.error("Error fetching orders:", err);
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchOrders();
-  }, []);
-
-  const handleOrderAction = (action, order) => {
-    if (action === 'view') {
-      setSelectedOrder(order);
-      setIsModalOpen(true);
-      return;
-    }
-
-    // Optimistic Update for UI (In real app, call API here)
-    setOrders(prevOrders => prevOrders.map(o => {
-      if (o.id !== order.id) return o;
-
-      if (action === 'confirm') return { ...o, status: 'Success' };
-      if (action === 'cancel') return { ...o, status: 'Cancelled' };
-      if (action === 'restore') return { ...o, status: 'Pending' };
-      return o;
-    }));
+  const showToast = (type, message) => {
+    setToast({ show: true, type, message });
   };
 
-  // Pagination Logic
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentOrders = orders.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(orders.length / itemsPerPage);
+  // Pagination State API Backend
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10); 
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalElements, setTotalElements] = useState(0);
+
+  const getAuthHeader = () => {
+    const token = localStorage.getItem('token');
+    return token ? { "Authorization": `Bearer ${token}` } : {};
+  };
+
+  const formatVND = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val);
+
+  // --- API CONNECTION LẤY ĐƠN HÀNG CÓ PHÂN TRANG VÀ LỌC ---
+  const fetchOrders = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const pageIndex = currentPage - 1; 
+      const params = new URLSearchParams();
+      params.append('page', pageIndex);
+      params.append('size', itemsPerPage);
+      
+      if (appliedSearchRecipient) params.append('recipient', appliedSearchRecipient);
+
+      const response = await fetch(`http://localhost:8086/api/v1/orders/get-all-list-order?${params.toString()}`, {
+          method: 'GET',
+          headers: {
+              "Content-Type": "application/json",
+              ...getAuthHeader()
+          }
+      });
+
+      if (!response.ok) {
+          throw new Error("Lỗi khi tải danh sách đơn hàng.");
+      }
+
+      const data = await response.json();
+
+      if (data.code === 0 && data.result) {
+          const content = data.result.content || [];
+          setTotalPages(data.result.totalPages || 1);
+          setTotalElements(data.result.totalElements || 0);
+
+          const mappedOrders = content.map(o => {
+              const orderItems = o.orderItems || [];
+              const quantity = orderItems.reduce((acc, item) => acc + (item.quantity || 0), 0);
+              
+              const firstItem = orderItems.length > 0 ? orderItems[0] : null;
+              const productNameDisplay = orderItems.length > 0 
+                  ? (orderItems.length > 1 ? `${firstItem.productName} (+${orderItems.length - 1} sp khác)` : firstItem.productName) 
+                  : "Không có sản phẩm";
+
+              let displayStatus = o.status;
+              let statusColor = "bg-gray-100 text-gray-700";
+              const rawStatus = o.status?.toLowerCase();
+              
+              switch (rawStatus) {
+                  case 'success':
+                  case 'delivered':
+                      displayStatus = 'Thành công';
+                      statusColor = 'bg-emerald-100 text-emerald-700 border border-emerald-200';
+                      break;
+                  case 'pending':
+                      displayStatus = 'Chờ xử lý';
+                      statusColor = 'bg-amber-100 text-amber-700 border border-amber-200';
+                      break;
+                  case 'processing':
+                      displayStatus = 'Đang xử lý';
+                      statusColor = 'bg-blue-100 text-blue-700 border border-blue-200';
+                      break;
+                  case 'shipped':
+                      displayStatus = 'Đang giao';
+                      statusColor = 'bg-indigo-100 text-indigo-700 border border-indigo-200';
+                      break;
+                  case 'cancelled':
+                  case 'failed':
+                      displayStatus = 'Đã hủy / Lỗi';
+                      statusColor = 'bg-red-100 text-red-700 border border-red-200';
+                      break;
+                  default:
+                      displayStatus = o.status;
+              }
+
+              const displayId = o.orderId.includes('_') ? o.orderId.split('_').pop() : o.orderId;
+
+              return {
+                  id: displayId,
+                  rawId: o.orderId,
+                  rawStatus: rawStatus, 
+                  customer: o.recipient || `Khách hàng`,
+                  phone: o.phoneNumber || "N/A",
+                  location: o.locationDetail || "N/A",
+                  productName: productNameDisplay,
+                  items: orderItems,
+                  quantity: quantity,
+                  totalAmountRaw: o.totalAmount,
+                  total: formatVND(o.totalAmount),
+                  status: displayStatus,
+                  statusColor: statusColor,
+                  date: o.createdAt ? new Date(o.createdAt).toLocaleString('vi-VN', {
+                    hour: '2-digit', minute:'2-digit', day:'2-digit', month:'2-digit', year:'numeric'
+                  }) : "N/A",
+              };
+          });
+          setOrders(mappedOrders);
+      } else {
+          console.error("Lỗi format response API:", data);
+          setOrders([]);
+          setTotalElements(0);
+      }
+    } catch (err) {
+      console.error("Error fetching orders:", err);
+      setError(err.message);
+      setOrders([]);
+      setTotalElements(0);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Chỉ gọi API khi appliedSearchRecipient, currentPage, hoặc itemsPerPage thay đổi
+  useEffect(() => {
+    fetchOrders();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [appliedSearchRecipient, currentPage, itemsPerPage]);
+
+  // --- API GỌI XEM CHI TIẾT ĐƠN HÀNG ---
+  const handleViewDetail = async (order) => {
+    setIsActionLoading(true);
+    try {
+      const response = await fetch(`http://localhost:8086/api/v1/orders/get-order-detail/${order.id}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeader()
+        }
+      });
+      const data = await response.json();
+      
+      if (response.ok && data.code === 0 && data.result) {
+        const result = data.result;
+        const detailedOrder = {
+           ...order,
+           subtotal: result.subtotal ? formatVND(result.subtotal) : null,
+           discount: result.discount ? formatVND(result.discount) : null,
+           items: result.orderItems || [],
+        };
+        setSelectedOrder(detailedOrder);
+        setIsModalOpen(true);
+      } else {
+        showToast('error', data.message || 'Không thể lấy chi tiết đơn hàng.');
+      }
+    } catch (err) {
+      console.error("Lỗi lấy chi tiết đơn hàng:", err);
+      showToast('error', 'Lỗi kết nối đến máy chủ.');
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
+
+  // --- API THAY ĐỔI TRẠNG THÁI (XÁC NHẬN / HỦY) ---
+  const handleUpdateStatus = async (order, isConfirm) => {
+    setIsActionLoading(true);
+    try {
+      const response = await fetch(`http://localhost:8086/api/v1/orders/change-order-status/${order.id}?isConfirm=${isConfirm}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeader()
+        }
+      });
+      const data = await response.json();
+      
+      if (response.ok && data.code === 0) {
+         if (data.message && data.message.includes("không thể thay đổi trạng thái")) {
+            showToast('error', data.message);
+         } else {
+            showToast('success', `Đã ${isConfirm === 1 ? 'xác nhận' : 'hủy'} đơn hàng thành công.`);
+            fetchOrders(); 
+         }
+      } else {
+         showToast('error', data.message || 'Có lỗi xảy ra, không thể thực hiện thao tác này.');
+      }
+    } catch (err) {
+      console.error("Lỗi thay đổi trạng thái:", err);
+      showToast('error', 'Lỗi kết nối đến máy chủ.');
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
+    window.scrollTo(0, 0);
   };
 
   const handleItemsPerPageChange = (e) => {
     setItemsPerPage(Number(e.target.value));
-    setCurrentPage(1); // Reset to page 1
+    setCurrentPage(1); 
   };
+
+  const handleSearchSubmit = () => {
+    setAppliedSearchRecipient(searchRecipient);
+    setCurrentPage(1);
+  };
+
+  const handleResetFilter = () => {
+    setSearchRecipient('');
+    setAppliedSearchRecipient('');
+    setCurrentPage(1);
+  };
+
+  const indexOfFirstItem = totalElements === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+  const indexOfLastItem = Math.min(currentPage * itemsPerPage, totalElements);
 
   const renderPagination = () => {
     const pages = [];
     if (totalPages <= 5) {
       for (let i = 1; i <= totalPages; i++) pages.push(i);
     } else {
-      // Always add 1
       pages.push(1);
-
       if (currentPage > 3) pages.push('...');
 
-      // Range around current
       let start = Math.max(2, currentPage - 1);
       let end = Math.min(totalPages - 1, currentPage + 1);
 
-      if (currentPage <= 3) {
-          start = 2;
-          end = 4;
-      }
-      if (currentPage >= totalPages - 2) {
-          start = totalPages - 3;
-          end = totalPages - 1;
-      }
+      if (currentPage <= 3) { start = 2; end = 4; }
+      if (currentPage >= totalPages - 2) { start = totalPages - 3; end = totalPages - 1; }
 
-      for (let i = start; i <= end; i++) {
-          pages.push(i);
-      }
+      for (let i = start; i <= end; i++) { pages.push(i); }
 
       if (currentPage < totalPages - 2) pages.push('...');
-
-      // Always add last
-      pages.push(totalPages);
+      if (totalPages > 1 && pages[pages.length - 1] !== totalPages) {
+         pages.push(totalPages);
+      }
     }
     
     return pages.map((page, index) => {
@@ -365,7 +446,7 @@ export const OrderDashBoard = () => {
           <button
               key={page}
               onClick={() => handlePageChange(page)}
-              className={`w-9 h-9 flex items-center justify-center rounded-lg text-sm font-medium transition-colors ${currentPage === page ? 'bg-indigo-600 text-white shadow-sm' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'}`}
+              className={`w-9 h-9 flex items-center justify-center rounded-lg text-sm font-medium transition-colors cursor-pointer border-none ${currentPage === page ? 'bg-indigo-600 text-white shadow-sm' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'}`}
           >
               {page}
           </button>
@@ -375,174 +456,185 @@ export const OrderDashBoard = () => {
 
   return (
     <MainLayout>
-      <div className="space-y-6 animate-in fade-in duration-500 p-3 bg-slate-50 min-h-screen">
+      <div className="space-y-6 animate-in fade-in duration-500 p-4 md:p-6 bg-slate-50 min-h-screen relative">
         
+        {/* Loading Overlay khi gọi Action */}
+        {isActionLoading && (
+          <div className="fixed inset-0 z-[9999] bg-white/50 flex items-center justify-center backdrop-blur-[1px]">
+            <Loader2 size={48} className="animate-spin text-[#eb5322]" />
+          </div>
+        )}
+
+        {/* Toast Notification */}
+        {toast.show && (
+          <ToastNotification 
+            message={toast.message} 
+            type={toast.type} 
+            onClose={() => setToast(prev => ({ ...prev, show: false }))} 
+          />
+        )}
+
         {/* --- HEADER SECTION --- */}
         <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-slate-800">Order Processing</h1>
-            <p className="text-slate-500 mt-1 text-sm">Manage and process all product orders</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <button className="flex items-center px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 transition-all shadow-sm">
-              <Filter size={16} className="mr-2" /> Filter
-            </button>
-            <button className="flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-all shadow-sm shadow-indigo-200">
-              <Download size={16} className="mr-2" /> Export Data
-            </button>
+            <h1 className="text-2xl font-bold text-slate-800">Quản lý Đơn hàng</h1>
+            <p className="text-slate-500 mt-1 text-sm">Theo dõi và xử lý toàn bộ đơn hàng hệ thống</p>
           </div>
         </div>
 
-        {/* --- FILTERS SECTION --- */}
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            
-            {/* Filter: Order Status */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-500 uppercase">Order Status</label>
-              <div className="relative">
-                <select className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none cursor-pointer">
-                  <option>All Statuses</option>
-                  <option>Success</option>
-                  <option>Pending</option>
-                  <option>Cancelled</option>
-                </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-              </div>
-            </div>
-
-            {/* Filter: Category */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-500 uppercase">Category</label>
-              <div className="relative">
-                <select className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none cursor-pointer">
-                  <option>All Categories</option>
-                  <option>Ticket</option>
-                  <option>Meeting</option>
-                  <option>Festival</option>
-                  <option>Show</option>
-                </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-              </div>
-            </div>
-
-            {/* Filter: Order Date */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-500 uppercase">Order Date</label>
-              <div className="relative">
-                <select className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none cursor-pointer">
-                  <option value="all">All Days</option>
-                  <option value="today">Today</option>
-                  <option value="week">This Week</option>
-                  <option value="month">This Month</option>
-                </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-              </div>
-            </div>
-
-            {/* Search */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-500 uppercase">Search</label>
-              <div className="relative">
-                <input 
-                  type="text" 
-                  placeholder="Order ID, Customer..." 
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              </div>
+        {/* --- FILTER & SEARCH --- */}
+        <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col md:flex-row gap-4 items-end">
+          <div className="flex-1 w-full max-w-md">
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5 block">Tìm theo khách hàng</label>
+            <div className="relative group">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+              <input 
+                type="text" 
+                value={searchRecipient}
+                onChange={(e) => setSearchRecipient(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSearchSubmit();
+                  }
+                }}
+                placeholder="Nhập tên khách hàng..." 
+                className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+              />
             </div>
           </div>
-
-          {/* Action Buttons */}
-          <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-100">
-            <button className="flex items-center px-4 py-2 bg-white border border-slate-300 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-50 hover:text-red-600 hover:border-red-200 transition-all">
-              <RotateCcw size={14} className="mr-2" /> Reset
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={handleSearchSubmit} 
+              className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-all shadow-sm border-none cursor-pointer flex items-center h-[38px]"
+            >
+              <Search size={16} className="mr-2" /> Tìm kiếm
             </button>
-            <button className="flex items-center px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-all shadow-sm">
-              <Search size={14} className="mr-2" /> Apply
+            <button 
+              onClick={handleResetFilter} 
+              className="px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 rounded-lg text-sm font-medium transition-all shadow-sm cursor-pointer flex items-center h-[38px]"
+            >
+              <RefreshCcw size={16} className="mr-2" /> Làm mới
             </button>
           </div>
         </div>
 
         {/* --- LIST SECTION --- */}
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-visible">
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col min-h-[500px]">
           {/* List Header */}
-          <div className="px-6 py-4 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-4 bg-slate-50/50 rounded-t-xl">
+          <div className="px-6 py-4 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-4 bg-slate-50/50 rounded-t-xl shrink-0">
             <div className="flex items-center gap-3">
-              <h3 className="font-bold text-slate-800 text-lg">Order List</h3>
+              <h3 className="font-bold text-slate-800 text-lg">Danh sách đơn hàng</h3>
               <div className="flex items-center gap-2">
-                  {loading && <Loader2 className="w-4 h-4 animate-spin text-indigo-600" />}
-                  <span className="text-xs text-slate-500 bg-white px-2 py-1 border border-slate-200 rounded">Total: {orders.length}</span>
+                  <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 border border-indigo-100 rounded-md shadow-sm">
+                    Tổng: {totalElements}
+                  </span>
               </div>
             </div>
 
             {/* Show Per Page Control */}
-            <div className="flex items-center gap-2 text-sm text-slate-500">
-               <span>Show:</span>
+            <div className="flex items-center gap-2 text-sm text-slate-600">
+               <span className="text-slate-500 font-medium">Hiển thị:</span>
                <div className="relative">
                   <select 
                      value={itemsPerPage}
                      onChange={handleItemsPerPageChange}
-                     className="appearance-none pl-3 pr-8 py-1.5 bg-white border border-indigo-200 rounded-lg text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer hover:border-indigo-400 transition-colors"
+                     className="appearance-none pl-3 pr-8 py-1.5 bg-white border border-slate-300 rounded-lg text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer hover:border-indigo-400 transition-colors"
                   >
+                     <option value={6}>6</option>
                      <option value={10}>10</option>
-                     <option value={15}>15</option>
                      <option value={20}>20</option>
+                     <option value={50}>50</option>
                   </select>
                   <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                </div>
-               <span>per page</span>
+               <span className="text-slate-500">/ trang</span>
             </div>
           </div>
 
           {/* Table */}
-          <div className="overflow-x-auto min-h-[400px]">
+          <div className="overflow-auto flex-1 max-h-[60vh]">
             {loading ? (
                 <div className="flex flex-col items-center justify-center h-64 text-slate-400">
                     <Loader2 className="w-10 h-10 animate-spin text-indigo-600 mb-3" />
-                    <p>Loading orders...</p>
+                    <p>Đang tải dữ liệu...</p>
+                </div>
+            ) : error ? (
+                <div className="flex flex-col items-center justify-center h-64 text-red-500">
+                    <AlertCircle className="w-10 h-10 mb-3" />
+                    <p>{error}</p>
                 </div>
             ) : (
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-slate-50 border-b border-slate-200 text-xs uppercase text-slate-500 font-semibold tracking-wider">
-                  <th className="px-6 py-4 w-10 text-center">
-                    <input type="checkbox" className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer" />
-                  </th>
-                  <th className="px-6 py-4">Order ID</th>
-                  <th className="px-6 py-4">Customer</th>
-                  {/* Removed Product Info Column */}
-                  <th className="px-6 py-4 text-center">Qty</th>
-                  <th className="px-6 py-4 text-right">Total</th>
-                  <th className="px-6 py-4 text-center">Status</th>
-                  <th className="px-6 py-4">Date</th>
-                  <th className="px-6 py-4 text-center">Actions</th>
+            <table className="w-full text-left border-collapse min-w-[1000px]">
+              <thead className="sticky top-0 z-20 bg-slate-50 shadow-[0_1px_0_0_#e2e8f0]">
+                <tr className="text-xs uppercase text-slate-500 font-bold tracking-wider">
+                  <th className="px-6 py-4 w-12 text-center">STT</th>
+                  <th className="px-6 py-4">Mã ĐH</th>
+                  <th className="px-6 py-4">Khách hàng</th>
+                  <th className="px-6 py-4">Sản phẩm</th>
+                  <th className="px-6 py-4 text-center">Tổng SL</th>
+                  <th className="px-6 py-4 text-right">Tổng Tiền</th>
+                  <th className="px-6 py-4 text-center">Trạng thái</th>
+                  <th className="px-6 py-4">Ngày đặt</th>
+                  <th className="px-6 py-4 text-center">Thao tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {currentOrders.map((order, index) => (
+                {orders.map((order, index) => (
                   <tr key={index} className="hover:bg-slate-50/80 transition-colors group">
-                    <td className="px-6 py-4 text-center">
-                      <input type="checkbox" className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer" />
+                    <td className="px-6 py-4 text-center font-medium text-slate-400">
+                      {(currentPage - 1) * itemsPerPage + index + 1}
                     </td>
-                    <td className="px-6 py-4 font-medium text-indigo-600 cursor-pointer hover:underline max-w-[150px] truncate" title={order.id}>{order.id}</td>
-                    <td className="px-6 py-4 text-slate-700 font-medium">{order.customer}</td>
-                    {/* Removed Product Info Cell */}
-                    <td className="px-6 py-4 text-center text-slate-700">{order.quantity}</td>
-                    <td className="px-6 py-4 text-right font-bold text-slate-800">{order.total}</td>
+                    <td className="px-6 py-4 font-bold text-[#eb5322] cursor-pointer hover:underline max-w-[120px] truncate" title={order.rawId}>
+                      <span onClick={() => handleViewDetail(order)}>#{order.id}</span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <p className="text-slate-800 font-bold m-0 leading-tight">{order.customer}</p>
+                      <p className="text-slate-500 text-xs mt-1">{order.phone}</p>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3 max-w-[280px]">
+                        {order.items && order.items.length > 0 ? (
+                           <img src={order.items[0].imgUrl} alt="Thumb" className="w-10 h-10 rounded border border-slate-200 object-contain p-0.5 bg-white shrink-0" onError={(e) => { e.target.src = 'https://via.placeholder.com/40x40?text=IMG'; }}/>
+                        ) : (
+                           <div className="w-10 h-10 rounded border border-slate-200 bg-slate-50 flex items-center justify-center shrink-0 text-slate-300"><Package size={18}/></div>
+                        )}
+                        <p className="text-slate-700 font-medium text-sm truncate" title={order.productName}>{order.productName}</p>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-center font-bold text-slate-700">{order.quantity}</td>
+                    <td className="px-6 py-4 text-right font-extrabold text-slate-800">{order.total}</td>
                     <td className="px-6 py-4 text-center">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        order.status === 'Success' ? 'bg-emerald-100 text-emerald-700' :
-                        order.status === 'Pending' ? 'bg-amber-100 text-amber-700' :
-                        'bg-red-100 text-red-700'
-                      }`}>
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold tracking-wide ${order.statusColor}`}>
                         {order.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-slate-500 text-sm">{order.date}</td>
+                    <td className="px-6 py-4 text-slate-500 text-sm font-medium">{order.date}</td>
                     <td className="px-6 py-4 text-center">
-                      <ActionMenu order={order} onAction={handleOrderAction} />
+                      <div className="flex items-center justify-center gap-2">
+                        <button 
+                          onClick={() => handleViewDetail(order)} 
+                          className="p-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors border-none cursor-pointer" 
+                          title="Xem chi tiết"
+                        >
+                          <Eye size={18} />
+                        </button>
+                        <button 
+                          onClick={() => handleUpdateStatus(order, 1)} 
+                          disabled={order.rawStatus !== 'pending'} 
+                          className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 transition-colors border-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400" 
+                          title="Xác nhận đơn"
+                        >
+                          <Check size={18} />
+                        </button>
+                        <button 
+                          onClick={() => handleUpdateStatus(order, 2)} 
+                          disabled={order.rawStatus === 'cancelled' || order.rawStatus === 'failed'} 
+                          className="p-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors border-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400" 
+                          title="Hủy đơn"
+                        >
+                          <XCircle size={18} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -551,40 +643,42 @@ export const OrderDashBoard = () => {
             )}
             
             {/* Empty State */}
-            {!loading && orders.length === 0 && (
+            {!loading && orders.length === 0 && !error && (
                 <div className="flex flex-col items-center justify-center h-64 text-slate-400">
                     <Search className="w-12 h-12 mb-3 opacity-20" />
-                    <p>No orders found.</p>
+                    <p className="text-sm font-medium">Không tìm thấy đơn hàng nào.</p>
                 </div>
             )}
           </div>
           
           {/* Pagination */}
-          <div className="px-6 py-4 border-t border-slate-200 bg-white flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="text-sm text-slate-500">
-              Page <span className="font-medium text-slate-900">{currentPage}</span> of <span className="font-medium text-slate-900">{totalPages}</span>
-            </div>
-            
-            <div className="flex gap-2">
-              <button 
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="w-9 h-9 flex items-center justify-center border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-500 disabled:opacity-50 transition-colors"
-              >
-                <ChevronLeft size={18} />
-              </button>
+          {totalPages > 0 && (
+            <div className="px-6 py-4 border-t border-slate-200 bg-white flex flex-col sm:flex-row items-center justify-between gap-4 shrink-0 rounded-b-xl">
+              <div className="text-sm text-slate-500 font-medium">
+                Đang hiển thị <span className="text-slate-900 font-bold">{indexOfFirstItem}</span> - <span className="text-slate-900 font-bold">{indexOfLastItem}</span> trong tổng số <span className="text-slate-900 font-bold">{totalElements}</span> đơn hàng
+              </div>
               
-              {renderPagination()}
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="w-9 h-9 flex items-center justify-center border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer bg-white border-none shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+                >
+                  <ChevronLeft size={18} />
+                </button>
+                
+                {renderPagination()}
 
-              <button 
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className="w-9 h-9 flex items-center justify-center border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-500 disabled:opacity-50 transition-colors"
-              >
-                <ChevronRight size={18} />
-              </button>
+                <button 
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="w-9 h-9 flex items-center justify-center border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer bg-white border-none shadow-[0_0_2px_rgba(0,0,0,0.2)]"
+                >
+                  <ChevronRight size={18} />
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
