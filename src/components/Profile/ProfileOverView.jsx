@@ -17,9 +17,11 @@ const ProfileOverView = ({ userData, onEdit }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  // State quản lý danh sách đặt sân
+  // State quản lý danh sách đặt sân & phân trang
   const [bookings, setBookings] = useState([]);
   const [isLoadingBookings, setIsLoadingBookings] = useState(true);
+  const [currentBookingPage, setCurrentBookingPage] = useState(1);
+  const [totalBookingPages, setTotalBookingPages] = useState(1);
 
   // GỌI API LẤY DANH SÁCH ĐƠN HÀNG (PRODUCTS)
   useEffect(() => {
@@ -55,7 +57,7 @@ const ProfileOverView = ({ userData, onEdit }) => {
     fetchOrders();
   }, [currentPage, activeTab]);
 
-  // GỌI API LẤY DANH SÁCH ĐẶT SÂN (BOOKINGS) - Không phân trang
+  // GỌI API LẤY DANH SÁCH ĐẶT SÂN (BOOKINGS) - CÓ PHÂN TRANG
   useEffect(() => {
     if (activeTab !== 'bookings') return;
 
@@ -67,7 +69,7 @@ const ProfileOverView = ({ userData, onEdit }) => {
       }
       setIsLoadingBookings(true);
       try {
-        const response = await fetch(`http://localhost:8086/api/v1/bookings/get-user-booking-list`, {
+        const response = await fetch(`http://localhost:8086/api/v1/bookings/get-user-booking-list?page=${currentBookingPage - 1}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -75,9 +77,10 @@ const ProfileOverView = ({ userData, onEdit }) => {
           }
         });
         const data = await response.json();
-        if (response.ok && data.status === 200) {
-          // API trả về mảng dữ liệu nằm trong trường data
-          setBookings(data.data || []);
+        if (response.ok && data.status === 200 && data.data) {
+          // Lấy mảng dữ liệu content và tổng số trang từ API
+          setBookings(data.data.content || []);
+          setTotalBookingPages(data.data.totalPages || 1);
         }
       } catch (error) {
         console.error("Lỗi khi lấy danh sách đặt sân:", error);
@@ -87,7 +90,7 @@ const ProfileOverView = ({ userData, onEdit }) => {
     };
 
     fetchBookings();
-  }, [activeTab]);
+  }, [currentBookingPage, activeTab]);
 
 
   // Helper functions
@@ -131,17 +134,17 @@ const ProfileOverView = ({ userData, onEdit }) => {
     return strId.includes('_') ? strId.split('_').pop() : strId;
   };
 
-  const getPageNumbers = () => {
+  const getPageNumbers = (current, total) => {
     const pages = [];
-    if (totalPages <= 5) {
-      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    if (total <= 5) {
+      for (let i = 1; i <= total; i++) pages.push(i);
     } else {
-      if (currentPage <= 3) {
-        pages.push(1, 2, 3, 4, '...', totalPages);
-      } else if (currentPage >= totalPages - 2) {
-        pages.push(1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+      if (current <= 3) {
+        pages.push(1, 2, 3, 4, '...', total);
+      } else if (current >= total - 2) {
+        pages.push(1, '...', total - 3, total - 2, total - 1, total);
       } else {
-        pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+        pages.push(1, '...', current - 1, current, current + 1, '...', total);
       }
     }
     return pages;
@@ -331,26 +334,30 @@ const ProfileOverView = ({ userData, onEdit }) => {
             </div>
           </div>
 
-          {/* Phân trang (Chỉ hiển thị cho bảng đơn hàng có chức năng Pageable) */}
-          {activeTab === 'orders' && totalPages > 1 && !isLoadingOrders && (
+          {/* Phân trang (Hiển thị chung cho cả 2 tab) */}
+          {((activeTab === 'orders' && totalPages > 1 && !isLoadingOrders) || 
+            (activeTab === 'bookings' && totalBookingPages > 1 && !isLoadingBookings)) && (
             <div className="mt-6 flex items-center justify-center gap-2">
               <button
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
+                onClick={() => activeTab === 'orders' ? setCurrentPage(prev => Math.max(prev - 1, 1)) : setCurrentBookingPage(prev => Math.max(prev - 1, 1))}
+                disabled={(activeTab === 'orders' ? currentPage : currentBookingPage) === 1}
                 className="w-8 h-8 flex items-center justify-center rounded-sm border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
               >
                 &laquo;
               </button>
               
-              {getPageNumbers().map((page, idx) => (
+              {getPageNumbers(
+                activeTab === 'orders' ? currentPage : currentBookingPage,
+                activeTab === 'orders' ? totalPages : totalBookingPages
+              ).map((page, idx) => (
                 page === '...' ? (
                   <span key={`dots-${idx}`} className="px-2 text-gray-400">...</span>
                 ) : (
                   <button
                     key={page}
-                    onClick={() => setCurrentPage(page)}
+                    onClick={() => activeTab === 'orders' ? setCurrentPage(page) : setCurrentBookingPage(page)}
                     className={`w-8 h-8 flex items-center justify-center rounded-sm text-sm transition-colors border cursor-pointer ${
-                      currentPage === page 
+                      (activeTab === 'orders' ? currentPage : currentBookingPage) === page 
                         ? 'bg-[#eb5322] text-white border-[#eb5322] font-bold' 
                         : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:text-[#eb5322]'
                     }`}
@@ -361,8 +368,8 @@ const ProfileOverView = ({ userData, onEdit }) => {
               ))}
 
               <button
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                disabled={currentPage === totalPages}
+                onClick={() => activeTab === 'orders' ? setCurrentPage(prev => Math.min(prev + 1, totalPages)) : setCurrentBookingPage(prev => Math.min(prev + 1, totalBookingPages))}
+                disabled={(activeTab === 'orders' ? currentPage : currentBookingPage) === (activeTab === 'orders' ? totalPages : totalBookingPages)}
                 className="w-8 h-8 flex items-center justify-center rounded-sm border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
               >
                 &raquo;
@@ -376,5 +383,6 @@ const ProfileOverView = ({ userData, onEdit }) => {
     </div>
   );
 };
+
 
 export default ProfileOverView;

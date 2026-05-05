@@ -63,6 +63,12 @@ const BookingDetailPage = () => {
     return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
   };
 
+  const formatDateTime = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' });
+  };
+
   const formatTimeForDisplay = (timeStr) => {
     if (!timeStr) return '';
     const parts = timeStr.split(':');
@@ -79,7 +85,7 @@ const BookingDetailPage = () => {
     if (s.includes('hủy') || s === 'cancelled' || s === 'failed' || s === 'failure') {
       colorClass = "text-[#e3001b]";
       text = s === 'cancelled' ? 'Đã hủy' : (s === 'failed' || s === 'failure' ? 'Thất bại' : 'Đã hủy');
-    } else if (s.includes('thành công') || s === 'success' || s === 'paid') {
+    } else if (s.includes('thành công') || s === 'success' || s === 'paid' || s === 'confirmed') {
       colorClass = "text-[#5cb85c]";
       text = 'Thành công';
     } else if (s === 'pending') {
@@ -140,7 +146,7 @@ const BookingDetailPage = () => {
         {/* Nút Quay lại Profile */}
         <div className="mb-10">
           <Link 
-            to="/profile" 
+            to="/profile?view=overview&tab=bookings" 
             className="inline-block bg-[#eb5322] hover:bg-[#d04316] text-white px-8 py-3 text-[14px] font-medium rounded-sm transition-colors uppercase !no-underline"
           >
             QUAY LẠI TÀI KHOẢN
@@ -160,7 +166,7 @@ const BookingDetailPage = () => {
           <div className="flex">
             <span className="w-24 flex-shrink-0">Ngày đặt:</span>
             <span className="font-bold text-gray-900 flex-1 leading-snug">
-              {formatDate(bookingData.bookingDate || bookingData.createdAt)}
+              {formatDateTime(bookingData.createdAt)}
             </span>
           </div>
           <div className="flex">
