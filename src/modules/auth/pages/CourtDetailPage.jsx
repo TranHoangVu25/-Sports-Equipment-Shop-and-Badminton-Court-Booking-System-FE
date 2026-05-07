@@ -346,9 +346,7 @@ const BookingTimeline = ({ court, onBack }) => {
     );
   };
 
-  // NÚT CHUYỂN HƯỚNG SANG TRANG XÁC NHẬN THANH TOÁN MỚI VỚI DATA CHUẨN JSON MẢNG
   const handleNavigateToCheckout = () => {
-    // Sắp xếp các slot đã chọn theo sân và thời gian
     const sorted = [...selectedSlots].sort((a, b) => {
       if (a.courtId !== b.courtId) return a.courtId - b.courtId;
       return a.timeStr.localeCompare(b.timeStr);
@@ -360,7 +358,7 @@ const BookingTimeline = ({ court, onBack }) => {
     sorted.forEach(slot => {
       const [h, m] = slot.timeStr.split(':').map(Number);
       const timeInMinutes = h * 60 + m;
-      const slotPricePerHour = slot.price * 2; // 1 slot là 30p, giá 1h = giá 1 slot * 2
+      const slotPricePerHour = slot.price * 2; 
 
       if (!currentGroup) {
         currentGroup = {
@@ -372,7 +370,6 @@ const BookingTimeline = ({ court, onBack }) => {
           totalPrice: slot.price
         };
       } else {
-        // Gộp nếu cùng sân, cùng mức giá và thời gian nối tiếp nhau
         if (
           currentGroup.courtId === slot.courtId && 
           currentGroup.endTimeInMinutes === timeInMinutes &&
@@ -398,7 +395,6 @@ const BookingTimeline = ({ court, onBack }) => {
       groupedBookings.push(currentGroup);
     }
 
-    // Map lại đúng format thời gian HH:mm:ss theo yêu cầu
     const finalBookingDetails = groupedBookings.map(g => {
       const startH = Math.floor(g.startTimeInMinutes / 60);
       const startM = g.startTimeInMinutes % 60;
@@ -423,7 +419,7 @@ const BookingTimeline = ({ court, onBack }) => {
         totalAmount, 
         totalHours, 
         totalMins,
-        bookingDetails: finalBookingDetails // Truyền mảng bookingDetails chuẩn
+        bookingDetails: finalBookingDetails 
       }
     });
   };
@@ -566,7 +562,7 @@ const CourtDetailPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('Dịch vụ'); 
-  const TABS = ['Thông tin', 'Dịch vụ', 'Hình ảnh', 'Điều khoản & quy định', 'Đánh giá'];
+  const TABS = ['Thông tin', 'Dịch vụ', 'Hình ảnh', 'Điều khoản & quy định']; // Đã xóa tab Đánh giá
   const [showBookingTimeline, setShowBookingTimeline] = useState(false);
 
   const formatPrice = (price) => price ? Number(price).toLocaleString('vi-VN') + ' ₫' : '0 ₫';
@@ -575,6 +571,16 @@ const CourtDetailPage = () => {
     if (!timeStr) return '';
     if (timeStr === '23:59:00' || timeStr === '24:00:00') return '24h';
     return timeStr.substring(0, 5).replace(/^0/, '').replace(':00', 'h');
+  };
+
+  // Helper hàm lấy ký tự đầu của tên sân để làm Logo chuyên nghiệp
+  const getInitials = (name) => {
+    if (!name) return "VN";
+    const words = name.trim().split(/\s+/);
+    if (words.length >= 2) {
+      return (words[0][0] + words[1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
   };
 
   useEffect(() => {
@@ -596,12 +602,11 @@ const CourtDetailPage = () => {
           setCourt({
             id: result.courtCenterId,
             name: result.name || "Sân cầu lông chưa rõ tên",
-            rating: 4.6, reviews: 9,  category: "Cầu lông", 
+            category: "Cầu lông", 
             address: result.locationDetail || "Đang cập nhật địa chỉ",
             time: `${minTime} - ${maxTime}`,
             phone: result.phoneNumber || "Đang cập nhật",
             coverImage: coverImg,
-            logo: "https://via.placeholder.com/150x150/eb5322/ffffff?text=VNB", 
             description: `Hệ thống ${result.name} bao gồm ${result.courts?.length || 0} sân đạt chuẩn. Địa chỉ: ${result.locationDetail}.`,
             services: ["Wifi miễn phí", "Bãi đỗ xe", "Phòng thay đồ", "Giải khát", "Thuê vợt"],
             images: extractedImages.length > 0 ? extractedImages : ["https://via.placeholder.com/600x400?text=Chua+co+anh"],
@@ -726,13 +731,6 @@ const CourtDetailPage = () => {
             <h3 className="font-bold text-[16px] text-[#eb5322] mb-3">Nội quy sân bãi</h3>{court.rules}
           </div>
         );
-      case 'Đánh giá':
-        return (
-          <div className="animate-fade-in text-center py-10">
-            <Star size={48} className="text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500 font-medium">Chưa có đánh giá chi tiết nào cho sân này.</p>
-          </div>
-        );
       default: return null;
     }
   };
@@ -758,12 +756,14 @@ const CourtDetailPage = () => {
 
         <div className="max-w-[1000px] mx-auto px-4 relative z-10 -mt-24 mb-6">
           <div className="bg-white rounded-sm shadow-md p-6 pt-12 relative border border-gray-100">
-            <div className="absolute -top-12 left-6 w-24 h-24 bg-white rounded-sm border-4 border-white shadow-sm overflow-hidden flex items-center justify-center p-1">
-              <img src={court.logo} alt="Logo" className="w-full h-full object-contain rounded-sm" />
+            
+            {/* LOGO CHUYÊN NGHIỆP DÙNG CHỮ CÁI ĐẦU */}
+            <div className="absolute -top-12 left-6 w-24 h-24 bg-white rounded-sm border-4 border-white shadow-md overflow-hidden flex items-center justify-center p-0.5">
+              <div className="w-full h-full bg-gradient-to-br from-[#ff6b3d] to-[#eb5322] rounded-sm flex items-center justify-center text-white font-extrabold text-[36px] tracking-wider shadow-inner">
+                {getInitials(court.name)}
+              </div>
             </div>
-            <div className="absolute -top-4 left-[135px] bg-[#eb5322] text-white px-3 py-1 rounded-sm text-[12px] font-bold flex items-center shadow-sm">
-              <Star size={12} fill="currentColor" className="mr-1.5" />{court.rating} ({court.reviews} đánh giá)
-            </div>
+
             <div className="absolute top-4 right-4 md:top-6 md:right-6 hidden sm:block">
               <button onClick={() => setShowBookingTimeline(true)} className="bg-[#f0ad4e] hover:bg-[#e09d3e] text-white font-bold py-2.5 px-8 rounded-sm transition-colors shadow-sm text-[14px] border-none cursor-pointer">ĐẶT LỊCH</button>
             </div>

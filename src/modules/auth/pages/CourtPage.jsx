@@ -4,7 +4,6 @@ import {
   SlidersHorizontal, 
   MapPin, 
   XCircle, 
-  Heart, 
   Navigation, 
   Clock, 
   Star, 
@@ -14,7 +13,7 @@ import {
   X,
   Search
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 // --- Toast Notification Component ---
 const ToastNotification = ({ message, type, onClose }) => {
@@ -44,6 +43,7 @@ const ToastNotification = ({ message, type, onClose }) => {
 const CourtPage = () => {
   const [courts, setCourts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
 
   // Toast Notification State
   const [toast, setToast] = useState({ show: false, type: 'success', message: '' });
@@ -111,7 +111,7 @@ const CourtPage = () => {
       }
 
       const response = await fetch(`http://localhost:8086/api/v1/court-centers/search?${params.toString()}`, {
-        method: 'POST', // Đã chuyển sang sử dụng POST
+        method: 'POST', // Sử dụng POST theo Backend mới
         headers: {
           'Content-Type': 'application/json',
         }
@@ -262,9 +262,8 @@ const CourtPage = () => {
             {courts.map((court) => {
               // Xử lý dữ liệu trả về và fallback
               const imageUrl = court.imgUrl || "https://images.unsplash.com/photo-1508609349937-5ec4ae374ebf?auto=format&fit=crop&w=800&q=80";
-              const distance = court.distance != null ? `${Number(court.distance).toFixed(1)} km` : "Gần bạn";
+              const distance = court.distance != null ? `${Number(court.distance).toFixed(1)} km` : null;
               const time = "05:00 - 23:00"; // Fallback khung giờ hoạt động
-              const tags = ["Đơn ngày", "Sự kiện"]; // Fallback tags
 
               return (
                 <Link 
@@ -273,7 +272,7 @@ const CourtPage = () => {
                   className="bg-white rounded-sm shadow-sm border border-gray-200 overflow-hidden flex flex-col group hover:shadow-md transition-shadow !no-underline"
                 >
                   
-                  {/* Nửa trên: Hình ảnh & Tag */}
+                  {/* Nửa trên: Hình ảnh */}
                   <div className="h-44 md:h-52 relative overflow-hidden bg-gray-200">
                     <img 
                       src={imageUrl} 
@@ -281,30 +280,9 @@ const CourtPage = () => {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
                       onError={(e) => { e.target.src = 'https://via.placeholder.com/600x300?text=San+Cau+Long'; }}
                     />
-                    
-                    {/* Tag "Đơn ngày", "Sự kiện" */}
-                    <div className="absolute top-3 left-3 flex gap-2">
-                      {tags.includes("Đơn ngày") && (
-                        <span className="bg-[#1bd1a5] text-white text-[11px] font-bold px-2.5 py-1 rounded-sm flex items-center gap-1 shadow-sm">
-                          <Star size={10} fill="currentColor" /> Đơn ngày
-                        </span>
-                      )}
-                      {tags.includes("Sự kiện") && (
-                        <span className="bg-[#bd53db] text-white text-[11px] font-bold px-2.5 py-1 rounded-sm shadow-sm">
-                          Sự kiện
-                        </span>
-                      )}
-                    </div>
 
                     {/* Các nút tương tác góc phải */}
                     <div className="absolute top-3 right-3 flex gap-2">
-                      <button 
-                        onClick={(e) => e.preventDefault()} // Ngăn chặn chuyển trang khi bấm tym
-                        className="bg-white rounded-sm p-2 shadow-sm text-gray-600 hover:text-red-500 transition-colors border-none cursor-pointer flex items-center justify-center"
-                        title="Yêu thích"
-                      >
-                        <Heart size={16} />
-                      </button>
                       <button 
                         onClick={(e) => {
                           e.preventDefault(); // Ngăn chặn chuyển trang khi bấm chỉ đường
@@ -335,14 +313,14 @@ const CourtPage = () => {
                       </svg>
                     </div>
                     
-                    {/* Thông পুরা Text */}
+                    {/* Thông tin Text */}
                     <div className="flex-1 min-w-0 pb-10 text-gray-800">
                       <h3 className="font-bold text-[16px] leading-tight mb-1 truncate group-hover:text-[#eb5322] transition-colors" title={court.name}>
                         {court.name}
                       </h3>
                       
                       <p className="text-[13px] text-gray-600 mt-1.5 leading-snug line-clamp-2" title={court.locationDetail}>
-                        <span className="text-[#eb5322] font-medium mr-1">({distance})</span> 
+                        {distance && <span className="text-[#eb5322] font-medium mr-1">({distance})</span>}
                         {court.locationDetail}
                       </p>
                       
@@ -355,8 +333,8 @@ const CourtPage = () => {
                     <div className="absolute bottom-4 right-4 flex flex-col items-end">
                       <button 
                         onClick={(e) => {
-                          e.preventDefault(); // Tránh kích hoạt Link
-                          // Chuyển hướng hoặc xử lý đặt lịch nhanh
+                          e.preventDefault(); 
+                          navigate(`/court-detail/${court.courtCenterId}`);
                         }}
                         className="bg-[#f0ad4e] hover:bg-[#e09d3e] text-white font-bold py-2 px-5 rounded-sm text-[13px] border-none cursor-pointer transition-colors shadow-sm relative z-20"
                       >

@@ -37,8 +37,14 @@ const LoginForm = () => {
         // Có thể lưu thêm thông tin user nếu cần hiển thị tên ở Header
         localStorage.setItem('user', JSON.stringify(data.result));
 
-        // 2. Refresh lại toàn bộ web để TopBar tự động kiểm tra lại localStorage
-        window.location.href = '/'; 
+        // 2. Chuyển hướng dựa trên role trả về
+        if (role === 'ROLE_admin') {
+          // Phải dùng window.location.href để refresh lại toàn bộ app (tải lại layout Admin)
+          window.location.href = '/dashboard/main';
+        } else {
+          // ROLE_user hoặc các role mặc định khác thì về trang chủ
+          window.location.href = '/'; 
+        }
       } else {
         // Hiển thị lỗi từ backend trả về hoặc lỗi mặc định
         setError(data.message || 'Tài khoản hoặc mật khẩu không chính xác.');
@@ -118,4 +124,5 @@ const LoginForm = () => {
     </div>
   );
 };
+
 export default LoginForm;

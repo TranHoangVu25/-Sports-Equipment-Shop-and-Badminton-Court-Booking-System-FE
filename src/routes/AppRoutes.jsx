@@ -24,8 +24,8 @@ import { ProductDashBoard } from "../dashboard/products";
 import { MainDashBoard } from "../dashboard/main-dashboard";
 import { OrderDashBoard } from "../dashboard/orders";
 import { PromotionsDashBoard } from "../dashboard/promotions";
-
-
+import { CourtDashBoard } from "../dashboard/CourtDashBoard";
+import { BookingDashBoard } from "../dashboard/BookingDashBoard";
 
 const AppRoutes = () => {
   return (
@@ -48,12 +48,16 @@ const AppRoutes = () => {
         <Route path="/booking-detail/:id" element={<MainLayout><BookingDetailPage /></MainLayout>} />
 
         <Route element={<ChatbotDashboard />} path="/dashboard/chatbot" />
-      <Route element={<UserDashBoard />} path="/dashboard/users" />
-      <Route element={<ProductDashBoard />} path="/dashboard/products" />
-      <Route element={<MainDashBoard />} path="/dashboard/main" />
-      <Route element={<OrderDashBoard />} path="/dashboard/orders" />
-      <Route element={<PromotionsDashBoard />} path="/dashboard/promotions" />
-      
+        <Route element={<UserDashBoard />} path="/dashboard/users" />
+        <Route element={<ProductDashBoard />} path="/dashboard/products" />
+        <Route element={<MainDashBoard />} path="/dashboard/main" />
+        <Route element={<OrderDashBoard />} path="/dashboard/orders" />
+        <Route element={<PromotionsDashBoard />} path="/dashboard/promotions" />
+        <Route element={<CourtDashBoard />} path="/dashboard/courts" />
+        <Route element={<BookingDashBoard />} path="/dashboard/bookings" />
+
+
+
       </Routes>
     </BrowserRouter>
   );
