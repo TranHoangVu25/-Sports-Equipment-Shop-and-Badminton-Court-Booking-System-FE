@@ -1,25 +1,32 @@
-import {
-    AlertTriangle,
-    CheckCircle,
-    ChevronLeft,
-    ChevronRight,
-    Edit,
-    Eye,
-    Image as ImageIcon,
-    Loader2,
-    Map,
-    MapPin,
-    Phone,
-    Plus,
-    Save,
-    Search,
-    Trash2,
-    X,
-    XCircle
+import React, { useState, useEffect, useCallback } from "react";
+import { 
+  Search, 
+  Plus, 
+  Edit, 
+  Trash2, 
+  AlertTriangle,
+  MapPin,
+  Phone,
+  Layout,
+  X,
+  Save,
+  Image as ImageIcon,
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
+  Check,
+  Eye,
+  CheckCircle,
+  XCircle,
+  Map,
+  Clock,
+  DollarSign,
+  ExternalLink,
+  CalendarDays
 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { Link } from 'react-router-dom';
 
-import { MainLayout } from "../dashboard/layouts/main-layout";
+import { MainLayout } from "../dashboard/layouts/main-layout"; 
 
 // --- Toast Notification Component ---
 const ToastNotification = ({ message, type, onClose }) => {
@@ -61,7 +68,84 @@ const CourtDetailModal = ({ isOpen, onClose, court }) => {
   if (!isOpen || !court) return null;
 
   const displayImage = selectedImage || (court.images && court.images.length > 0 ? court.images[0] : null);
-  const isAvailable = court.status === 'Hoạt động';
+  const isDeleted = court.deleted === 1;
+
+  // Trích xuất giờ hoạt động từ slots (Lấy mẫu ngày đầu tiên nếu có)
+  const opHours = court.slots && court.slots.length > 0 
+    ? `${court.slots[0].startTime.substring(0,5)} - ${court.slots[0].endTime.substring(0,5)}` 
+    : "Chưa cập nhật";
+
+  // Hàm nhóm các rule giá theo ngày nếu có chung mức giá và khung giờ
+  const renderGroupedPricingRules = () => {
+    if (!court.pricingRules || court.pricingRules.length === 0) {
+        return <div className="text-sm text-gray-500 italic p-2">Chưa có thông tin bảng giá.</div>;
+    }
+
+    const daysMap = {};
+    court.pricingRules.forEach(rule => {
+      if (!daysMap[rule.dayOfWeek]) daysMap[rule.dayOfWeek] = [];
+      daysMap[rule.dayOfWeek].push(rule);
+    });
+
+    const signatureMap = {};
+    Object.keys(daysMap).forEach(day => {
+      const rules = daysMap[day].sort((a,b) => a.startTime.localeCompare(b.startTime));
+      // Tạo chuỗi signature để nhóm các ngày có cấu hình giống hệt nhau
+      const signature = rules.map(r => `${r.startTime}-${r.endTime}-${r.pricePerHour}`).join('|');
+      if (!signatureMap[signature]) {
+        signatureMap[signature] = { days: [], rules: rules };
+      }
+      signatureMap[signature].days.push(parseInt(day));
+    });
+
+    const finalGroups = Object.values(signatureMap).map(sig => {
+      const sortedDays = sig.days.sort((a,b) => a-b);
+      let dayLabel = '';
+      
+      const isT2toT6 = [2,3,4,5,6].every(d => sortedDays.includes(d)) && sortedDays.length === 5;
+      const isT7CN = sortedDays.includes(7) && (sortedDays.includes(1) || sortedDays.includes(8)) && sortedDays.length === 2;
+      
+      if (isT2toT6) dayLabel = 'T2 - T6';
+      else if (isT7CN) dayLabel = 'T7 - CN';
+      else if (sortedDays.length === 7) dayLabel = 'T2 - CN';
+      else dayLabel = sortedDays.map(d => (d === 1 || d === 8) ? 'CN' : `T${d}`).join(', ');
+
+      return { dayLabel, rules: sig.rules };
+    });
+
+    return (
+      <div className="bg-slate-50 rounded-lg border border-slate-200 overflow-hidden max-h-48 overflow-y-auto custom-scrollbar">
+        <table className="w-full text-left text-xs text-slate-700">
+          <thead className="bg-slate-100 border-b border-slate-200 sticky top-0">
+            <tr>
+              <th className="p-2.5 font-bold uppercase tracking-wide">Ngày áp dụng</th>
+              <th className="p-2.5 font-bold uppercase tracking-wide">Khung giờ</th>
+              <th className="p-2.5 font-bold uppercase tracking-wide text-right">Giá (₫/h)</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {finalGroups.map((g, gIdx) => (
+              g.rules.map((rule, rIdx) => (
+                <tr key={`${g.dayLabel}-${rIdx}`} className="hover:bg-slate-100/50 transition-colors">
+                  {rIdx === 0 && (
+                      <td rowSpan={g.rules.length} className="p-2.5 font-medium align-middle border-r border-slate-100 bg-white/50">
+                          {g.dayLabel}
+                      </td>
+                  )}
+                  <td className="p-2.5 font-medium">
+                      {rule.startTime.substring(0,5)} - {rule.endTime.substring(0,5)}
+                  </td>
+                  <td className="p-2.5 text-right font-bold text-[#eb5322]">
+                      {rule.pricePerHour.toLocaleString('vi-VN')}
+                  </td>
+                </tr>
+              ))
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-200">
@@ -80,7 +164,7 @@ const CourtDetailModal = ({ isOpen, onClose, court }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Images Section */}
                 <div className="space-y-4">
-                    <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center border border-slate-200 relative group p-2">
+                    <div className={`aspect-video bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center border border-slate-200 relative group p-2 ${isDeleted ? 'opacity-60 grayscale-[0.5]' : ''}`}>
                         {displayImage ? (
                             <img src={displayImage} alt={court.name} className="w-full h-full object-cover rounded-md" />
                         ) : (
@@ -90,11 +174,11 @@ const CourtDetailModal = ({ isOpen, onClose, court }) => {
                             </div>
                         )}
                         <div className="absolute top-3 right-3">
-                             <span className={`inline-flex items-center px-3 py-1 rounded-md text-xs font-bold uppercase tracking-wide border shadow-sm ${
-                                 isAvailable ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-red-100 text-red-700 border-red-200'
-                             }`}>
-                                 {isAvailable ? 'Hoạt động' : 'Tạm đóng'}
-                             </span>
+                             {isDeleted && (
+                               <span className="inline-flex items-center px-3 py-1 rounded-md text-xs font-bold uppercase tracking-wide border shadow-sm bg-gray-100 text-gray-500 border-gray-200">
+                                   Đã xóa
+                               </span>
+                             )}
                         </div>
                     </div>
                     {court.images && court.images.length > 1 && (
@@ -113,40 +197,37 @@ const CourtDetailModal = ({ isOpen, onClose, court }) => {
                 </div>
 
                 {/* Details Section */}
-                <div className="space-y-6">
+                <div className={`space-y-6 ${isDeleted ? 'opacity-70' : ''}`}>
                     <div>
-                        <h2 className="text-2xl font-bold text-gray-900 mb-3">{court.name}</h2>
-                        <div className="flex flex-col gap-2 text-sm text-slate-600">
+                        <h2 className="text-2xl font-bold text-gray-900 mb-3">
+                          {court.name} {isDeleted && <span className="text-sm font-medium text-red-500 ml-2">(Đã xóa)</span>}
+                        </h2>
+                        <div className="flex flex-col gap-2.5 text-sm text-slate-600">
                             <div className="flex items-start gap-2">
                                 <MapPin size={18} className="text-indigo-600 shrink-0 mt-0.5" />
-                                <span className="leading-snug">{court.address}</span>
+                                <div className="flex-1 leading-snug">
+                                  {court.address}
+                                  {court.googleMapUrl && (
+                                    <a href={court.googleMapUrl} target="_blank" rel="noreferrer" className="block text-indigo-500 hover:text-indigo-700 hover:underline mt-1 text-xs flex items-center">
+                                      <ExternalLink size={12} className="mr-1"/> Xem trên bản đồ
+                                    </a>
+                                  )}
+                                </div>
                             </div>
                             <div className="flex items-center gap-2">
                                 <Phone size={18} className="text-indigo-600 shrink-0" />
                                 <span className="font-semibold">{court.phone}</span>
                             </div>
+                            <div className="flex items-center gap-2">
+                                <Clock size={18} className="text-indigo-600 shrink-0" />
+                                <span className="font-medium">{opHours}</span>
+                            </div>
                         </div>
                     </div>
 
                     <div>
-                        <h4 className="text-sm font-bold text-slate-900 mb-2">Mô tả hệ thống sân</h4>
-                        <div className="text-slate-600 text-sm leading-relaxed whitespace-pre-wrap bg-slate-50 p-4 rounded-lg border border-slate-100 max-h-40 overflow-y-auto custom-scrollbar">
-                            {court.description || "Chưa có mô tả chi tiết."}
-                        </div>
-                    </div>
-
-                    <div>
-                         <h4 className="text-sm font-bold text-slate-900 mb-3">Thông số</h4>
-                         <div className="grid grid-cols-2 gap-4">
-                             <div className="bg-white border border-slate-200 rounded-lg p-3 text-center">
-                                 <p className="text-xs text-slate-400 uppercase font-semibold mb-1">Số lượng sân nhỏ</p>
-                                 <p className="text-xl font-bold text-indigo-600">{court.subCourtsCount || 0}</p>
-                             </div>
-                             <div className="bg-white border border-slate-200 rounded-lg p-3 text-center">
-                                 <p className="text-xs text-slate-400 uppercase font-semibold mb-1">Mã (ID)</p>
-                                 <p className="text-xl font-bold text-slate-800 font-mono">{court.id}</p>
-                             </div>
-                         </div>
+                        <h4 className="text-sm font-bold text-slate-900 mb-2 flex items-center"><DollarSign size={16} className="mr-1 text-green-600"/> Bảng giá dịch vụ</h4>
+                        {renderGroupedPricingRules()}
                     </div>
                 </div>
             </div>
@@ -218,55 +299,149 @@ const ConfirmDeleteModal = ({ isOpen, onClose, onConfirm, courtName }) => {
 
 // --- COURT FORM MODAL ---
 const CourtFormModal = ({ isOpen, onClose, onSave, initialData }) => {
+  const DAYS_OF_WEEK = [
+    { value: 1, label: 'T2' },
+    { value: 2, label: 'T3' },
+    { value: 3, label: 'T4' },
+    { value: 4, label: 'T5' },
+    { value: 5, label: 'T6' },
+    { value: 6, label: 'T7' },
+    { value: 7, label: 'CN' },
+  ];
+
   const [formData, setFormData] = useState({
-    name: "", address: "", phone: "", description: "", status: "Hoạt động"
+    name: "", address: "", phone: "", description: "",
+    numberOfCourts: 1,
+    openTime: "05:00",
+    closeTime: "23:00"
   });
+  
   const [images, setImages] = useState([""]);
+  const [pricingRules, setPricingRules] = useState([
+    { id: Date.now(), days: [1,2,3,4,5,6,7], startTime: "05:00", endTime: "23:00", pricePerHour: 100000 }
+  ]);
   const [errors, setErrors] = useState({}); 
 
   useEffect(() => {
     if (isOpen) {
       setErrors({}); 
       if (initialData) {
+        // Parse time from slots if available
+        let oTime = "05:00";
+        let cTime = "23:00";
+        if (initialData.slots && initialData.slots.length > 0) {
+            oTime = initialData.slots[0].startTime ? initialData.slots[0].startTime.substring(0, 5) : "05:00";
+            cTime = initialData.slots[0].endTime ? initialData.slots[0].endTime.substring(0, 5) : "23:00";
+        }
+
         setFormData({
           name: initialData.name,
           address: initialData.address || "",
           phone: initialData.phone || "",
-          status: initialData.status,
-          description: initialData.description || ""
+          description: initialData.description || "",
+          numberOfCourts: initialData.courts ? initialData.courts.length : 1,
+          openTime: oTime,
+          closeTime: cTime
         });
         setImages(initialData.images && initialData.images.length > 0 ? initialData.images : [""]);
+
+        // Gộp Pricing Rules dựa vào sự tương đồng để hiển thị lên UI
+        if (initialData.pricingRules && initialData.pricingRules.length > 0) {
+           const grouped = {};
+           initialData.pricingRules.forEach(r => {
+             // Không còn field ruleType nên key gộp chỉ dựa vào thời gian và giá
+             const key = `${r.startTime}-${r.endTime}-${r.pricePerHour}`;
+             if (!grouped[key]) {
+               grouped[key] = {
+                 id: Math.random(),
+                 days: [],
+                 startTime: r.startTime.substring(0, 5),
+                 endTime: r.endTime.substring(0, 5),
+                 pricePerHour: r.pricePerHour
+               };
+             }
+             if (!grouped[key].days.includes(r.dayOfWeek)) {
+               grouped[key].days.push(r.dayOfWeek);
+             }
+           });
+           setPricingRules(Object.values(grouped));
+        } else {
+           setPricingRules([{ id: Date.now(), days: [1,2,3,4,5,6,7], startTime: oTime, endTime: cTime, pricePerHour: 100000 }]);
+        }
+
       } else {
-        setFormData({ name: "", address: "", phone: "", description: "", status: "Hoạt động" });
+        setFormData({ name: "", address: "", phone: "", description: "", numberOfCourts: 1, openTime: "05:00", closeTime: "23:00" });
         setImages([""]); 
+        setPricingRules([{ id: Date.now(), days: [1,2,3,4,5,6,7], startTime: "05:00", endTime: "23:00", pricePerHour: 100000 }]);
       }
     }
   }, [isOpen, initialData]);
 
   if (!isOpen) return null;
 
-  const handleSimpleListChange = (index, value, list, setList) => {
-    const newList = [...list];
+  // Xử lý Danh sách Hình ảnh
+  const handleSimpleListChange = (index, value) => {
+    const newList = [...images];
     newList[index] = value;
-    setList(newList);
+    setImages(newList);
     if (value && errors.images) setErrors({...errors, images: null});
   };
   
-  const addSimpleField = (list, setList) => setList([...list, ""]);
-  const removeSimpleField = (index, list, setList) => {
-    const newList = [...list];
+  const addImageField = () => setImages([...images, ""]);
+  const removeImageField = (index) => {
+    const newList = [...images];
     newList.splice(index, 1);
-    setList(newList);
+    setImages(newList);
   };
 
+  // Xử lý Bảng giá (Pricing Rules)
+  const handleRuleChange = (index, field, value) => {
+    const newRules = [...pricingRules];
+    newRules[index] = { ...newRules[index], [field]: value };
+    setPricingRules(newRules);
+  };
+
+  const toggleRuleDay = (index, dayValue) => {
+    const newRules = [...pricingRules];
+    const rule = newRules[index];
+    if (rule.days.includes(dayValue)) {
+      rule.days = rule.days.filter(d => d !== dayValue);
+    } else {
+      rule.days = [...rule.days, dayValue];
+    }
+    setPricingRules(newRules);
+  };
+
+  const addPricingRule = () => {
+    setPricingRules([
+      ...pricingRules, 
+      { id: Date.now(), days: [], startTime: formData.openTime, endTime: formData.closeTime, pricePerHour: 100000 }
+    ]);
+  };
+
+  const removePricingRule = (index) => {
+    const newRules = [...pricingRules];
+    newRules.splice(index, 1);
+    setPricingRules(newRules);
+  };
+
+  // Validate form
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.name.trim()) newErrors.name = "Vui lòng nhập tên sân";
+    if (!formData.name.trim()) newErrors.name = "Vui lòng nhập tên hệ thống sân";
     if (!formData.address.trim()) newErrors.address = "Vui lòng nhập địa chỉ";
     if (!formData.phone.trim()) newErrors.phone = "Vui lòng nhập số điện thoại";
+    if (formData.numberOfCourts < 1) newErrors.numberOfCourts = "Số lượng sân phải lớn hơn 0";
     
     const hasValidImage = images.some(img => img.trim() !== "");
     if (!hasValidImage) newErrors.images = "Cần ít nhất 1 đường dẫn hình ảnh";
+
+    if (pricingRules.length === 0) {
+      newErrors.pricing = "Vui lòng cấu hình ít nhất 1 bảng giá";
+    } else {
+      const invalidRule = pricingRules.find(r => r.days.length === 0 || !r.startTime || !r.endTime || !r.pricePerHour);
+      if (invalidRule) newErrors.pricing = "Vui lòng điền đầy đủ thông tin cho các bảng giá (chọn ngày, giờ, giá)";
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -274,49 +449,58 @@ const CourtFormModal = ({ isOpen, onClose, onSave, initialData }) => {
 
   const handleSubmit = () => {
     if (validateForm()) {
+        // 1. Tạo mảng courts theo số lượng khai báo
+        const courtsPayload = Array.from({ length: formData.numberOfCourts }).map((_, i) => ({
+            name: `Sân ${i + 1}`,
+            type: "BADMINTON",
+            status: 1
+        }));
+
+        // 2. Tạo mảng slots hoạt động 7 ngày trong tuần
+        const slotsPayload = [1, 2, 3, 4, 5, 6, 7].map(day => ({
+            dayOfWeek: day,
+            startTime: `${formData.openTime}:00`,
+            endTime: `${formData.closeTime}:00`,
+            status: "OPEN"
+        }));
+
+        // 3. Phân tách Pricing Rules từ UI thành Array tiêu chuẩn
+        // Không lưu ruleType và priority nữa
+        const pricingRulesPayload = [];
+        pricingRules.forEach(rule => {
+            rule.days.forEach(day => {
+                pricingRulesPayload.push({
+                    dayOfWeek: day,
+                    startTime: `${rule.startTime}:00`,
+                    endTime: `${rule.endTime}:00`,
+                    pricePerHour: Number(rule.pricePerHour)
+                });
+            });
+        });
+
+        // 4. Tổng hợp
         const fullData = {
-            ...formData,
-            images: images.filter(img => img.trim() !== "")
+            name: formData.name,
+            locationDetail: formData.address,
+            phoneNumber: formData.phone,
+            description: formData.description,
+            courts: courtsPayload,
+            slots: slotsPayload,
+            pricingRules: pricingRulesPayload,
+            images: images.filter(img => img.trim() !== "").map((img, idx) => ({
+                imageUrl: img,
+                isThumbnail: idx === 0
+            }))
         };
-      onSave(fullData);
+
+        onSave(fullData);
     }
   };
 
-  const renderSimpleListInput = (label, icon, list, setList, placeholder, error) => (
-    <div className="space-y-3">
-      <label className="block text-sm font-semibold text-slate-700 flex items-center justify-between">
-        <div className="flex items-center">{icon} <span className="ml-2">{label}</span> <span className="text-red-500 ml-1">*</span></div>
-        {error && <span className="text-xs text-red-500 font-normal">{error}</span>}
-      </label>
-      <div className="space-y-2">
-        {list.map((item, index) => (
-          <div key={index} className="flex gap-2 items-center">
-            <input
-              type="text"
-              value={item}
-              onChange={(e) => handleSimpleListChange(index, e.target.value, list, setList)}
-              placeholder={`${placeholder} ${index + 1}`}
-              className={`flex-1 px-3 py-2 bg-slate-50 border rounded-lg text-sm focus:outline-none focus:ring-2 transition-all ${error && index === 0 && !item ? 'border-red-300 focus:ring-red-200' : 'border-slate-300 focus:ring-indigo-500'}`}
-            />
-            <button 
-              type="button"
-              onClick={() => removeSimpleField(index, list, setList)}
-              className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors bg-transparent border-none cursor-pointer"
-            >
-               <Trash2 size={16} />
-            </button>
-          </div>
-        ))}
-      </div>
-      <button type="button" onClick={() => addSimpleField(list, setList)} className="flex items-center text-xs font-medium text-indigo-600 hover:text-indigo-800 transition-colors bg-transparent border-none cursor-pointer">
-        <Plus size={14} className="mr-1" /> Thêm {label}
-      </button>
-    </div>
-  );
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-5xl flex flex-col max-h-[95vh] animate-in zoom-in-95 duration-200">
+        
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50 rounded-t-xl shrink-0">
           <h3 className="text-lg font-bold text-gray-900 flex items-center">
             <Map className="mr-2 text-indigo-600" size={20} /> 
@@ -327,16 +511,19 @@ const CourtFormModal = ({ isOpen, onClose, onSave, initialData }) => {
           </button>
         </div>
 
-        <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
+        <div className="p-6 overflow-y-auto custom-scrollbar flex-1 bg-white">
           {Object.keys(errors).length > 0 && (
-            <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3 text-red-700 text-sm animate-in slide-in-from-top-2">
-              <AlertTriangle size={16} />
-              <span>Vui lòng điền đầy đủ các trường bắt buộc (*)</span>
+            <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-lg flex flex-col gap-1 text-red-700 text-sm animate-in slide-in-from-top-2">
+              <div className="flex items-center gap-2 font-bold"><AlertTriangle size={16} /> Vui lòng kiểm tra lại các thông tin sau:</div>
+              <ul className="list-disc pl-8 m-0 mt-1 space-y-1">
+                {Object.values(errors).map((err, i) => <li key={i}>{err}</li>)}
+              </ul>
             </div>
           )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            {/* --- CỘT TRÁI: THÔNG TIN CƠ BẢN --- */}
+            <div className="lg:col-span-5 space-y-6">
               <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-2">Thông tin chung</h4>
               <div className="space-y-4">
                 <div>
@@ -348,7 +535,6 @@ const CourtFormModal = ({ isOpen, onClose, onSave, initialData }) => {
                     className={`w-full px-3 py-2 bg-slate-50 border rounded-lg text-sm focus:outline-none focus:ring-2 ${errors.name ? 'border-red-300 focus:ring-red-200' : 'border-slate-300 focus:ring-indigo-500'}`} 
                     placeholder="VD: Sân Cầu Lông An Huy..." 
                   />
-                  {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
                 </div>
 
                 <div>
@@ -360,12 +546,11 @@ const CourtFormModal = ({ isOpen, onClose, onSave, initialData }) => {
                     className={`w-full px-3 py-2 bg-slate-50 border rounded-lg text-sm focus:outline-none focus:ring-2 ${errors.address ? 'border-red-300 focus:ring-red-200' : 'border-slate-300 focus:ring-indigo-500'}`} 
                     placeholder="VD: 123 Đường ABC, Quận XYZ..." 
                   />
-                  {errors.address && <p className="text-xs text-red-500 mt-1">{errors.address}</p>}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">Số điện thoại liên hệ <span className="text-red-500">*</span></label>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1">Số điện thoại <span className="text-red-500">*</span></label>
                     <input 
                       type="tel" 
                       value={formData.phone}
@@ -373,25 +558,32 @@ const CourtFormModal = ({ isOpen, onClose, onSave, initialData }) => {
                       className={`w-full px-3 py-2 bg-slate-50 border rounded-lg text-sm focus:outline-none focus:ring-2 ${errors.phone ? 'border-red-300 focus:ring-red-200' : 'border-slate-300 focus:ring-indigo-500'}`} 
                       placeholder="0912345678" 
                     />
-                    {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">Trạng thái</label>
-                    <select 
-                      value={formData.status} 
-                      onChange={(e) => setFormData({...formData, status: e.target.value})} 
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
-                    >
-                      <option value="Hoạt động">Hoạt động</option>
-                      <option value="Tạm đóng">Tạm đóng</option>
-                    </select>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1">Số lượng sân nhỏ <span className="text-red-500">*</span></label>
+                    <input 
+                      type="number" 
+                      min="1"
+                      value={formData.numberOfCourts}
+                      onChange={(e) => { setFormData({...formData, numberOfCourts: parseInt(e.target.value) || 1}); if(e.target.value > 0) setErrors({...errors, numberOfCourts: null}); }}
+                      className={`w-full px-3 py-2 bg-slate-50 border rounded-lg text-sm focus:outline-none focus:ring-2 ${errors.numberOfCourts ? 'border-red-300 focus:ring-red-200' : 'border-slate-300 focus:ring-indigo-500'}`} 
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">Giờ mở cửa chung <span className="text-red-500">*</span></label>
+                  <div className="flex items-center gap-3">
+                     <input type="time" value={formData.openTime} onChange={e => setFormData({...formData, openTime: e.target.value})} className="flex-1 px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                     <span className="text-slate-400 font-bold">-</span>
+                     <input type="time" value={formData.closeTime} onChange={e => setFormData({...formData, closeTime: e.target.value})} className="flex-1 px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-1">Mô tả chi tiết</label>
                   <textarea 
-                    rows={4} 
+                    rows={3} 
                     value={formData.description} 
                     onChange={(e) => setFormData({...formData, description: e.target.value})} 
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none custom-scrollbar" 
@@ -401,8 +593,99 @@ const CourtFormModal = ({ isOpen, onClose, onSave, initialData }) => {
               </div>
             </div>
 
-            <div className="space-y-8">
-              {renderSimpleListInput("Hình ảnh (URL)", <ImageIcon size={16} className="text-pink-500"/>, images, setImages, "https://link-anh.jpg", errors.images)}
+            {/* --- CỘT PHẢI: BẢNG GIÁ & HÌNH ẢNH --- */}
+            <div className="lg:col-span-7 space-y-6">
+              
+              {/* KHỐI CẤU HÌNH BẢNG GIÁ */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                   <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center">
+                     <DollarSign size={16} className="mr-2 text-green-500"/> Cấu hình Giá & Khung giờ
+                   </h4>
+                   <button type="button" onClick={addPricingRule} className="text-xs font-medium text-indigo-600 hover:text-indigo-800 flex items-center bg-transparent border-none cursor-pointer">
+                      <Plus size={14} className="mr-1"/> Thêm Khung Giờ
+                   </button>
+                </div>
+                
+                <div className="space-y-3 max-h-[320px] overflow-y-auto pr-2 custom-scrollbar">
+                   {pricingRules.map((rule, index) => (
+                      <div key={rule.id} className="border border-slate-200 rounded-lg p-4 bg-slate-50 relative group">
+                        {pricingRules.length > 1 && (
+                          <button onClick={() => removePricingRule(index)} className="absolute top-2 right-2 text-slate-400 hover:text-red-500 transition-colors bg-transparent border-none cursor-pointer p-1">
+                            <Trash2 size={16}/>
+                          </button>
+                        )}
+                        
+                        <div className="mb-4">
+                          <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Áp dụng cho ngày</label>
+                          <div className="flex flex-wrap gap-1.5 mt-2">
+                            {DAYS_OF_WEEK.map(d => {
+                               const isActive = rule.days.includes(d.value);
+                               return (
+                                 <button
+                                   key={d.value} type="button"
+                                   onClick={() => toggleRuleDay(index, d.value)}
+                                   className={`w-9 h-8 rounded-md text-xs font-bold transition-all border-none cursor-pointer ${isActive ? 'bg-indigo-500 text-white shadow-sm shadow-indigo-200' : 'bg-white border border-slate-300 text-slate-600 hover:bg-slate-100'}`}
+                                 >
+                                   {d.label}
+                                 </button>
+                               );
+                            })}
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                           <div>
+                              <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Khung giờ</label>
+                              <div className="flex items-center gap-2 mt-1">
+                                <input type="time" value={rule.startTime} onChange={e => handleRuleChange(index, "startTime", e.target.value)} className="w-full px-2 py-2 bg-white border border-slate-300 rounded-md text-sm focus:outline-none focus:border-indigo-500" />
+                                <span className="text-slate-400 font-bold">-</span>
+                                <input type="time" value={rule.endTime} onChange={e => handleRuleChange(index, "endTime", e.target.value)} className="w-full px-2 py-2 bg-white border border-slate-300 rounded-md text-sm focus:outline-none focus:border-indigo-500" />
+                              </div>
+                           </div>
+                           <div>
+                              <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Giá tiền (VNĐ/h)</label>
+                              <input type="number" min="0" value={rule.pricePerHour} onChange={e => handleRuleChange(index, "pricePerHour", e.target.value)} className="w-full px-3 py-2 mt-1 bg-white border border-slate-300 rounded-md text-sm focus:outline-none focus:border-indigo-500" placeholder="Ví dụ: 100000" />
+                           </div>
+                        </div>
+                      </div>
+                   ))}
+                </div>
+              </div>
+
+              {/* KHỐI HÌNH ẢNH */}
+              <div className="space-y-3 pt-4 border-t border-slate-100">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                   <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center">
+                     <ImageIcon size={16} className="mr-2 text-pink-500"/> Hình ảnh minh họa (URL)
+                   </h4>
+                   {errors.images && <span className="text-xs text-red-500">{errors.images}</span>}
+                </div>
+                <div className="space-y-2">
+                  {images.map((item, index) => (
+                    <div key={index} className="flex gap-2 items-center">
+                      <input
+                        type="text"
+                        value={item}
+                        onChange={(e) => handleSimpleListChange(index, e.target.value)}
+                        placeholder={`https://link-anh-san-${index + 1}.jpg`}
+                        className={`flex-1 px-3 py-2 bg-slate-50 border rounded-lg text-sm focus:outline-none focus:ring-2 transition-all ${errors.images && index === 0 && !item ? 'border-red-300' : 'border-slate-300 focus:ring-indigo-500'}`}
+                      />
+                      <button 
+                        type="button"
+                        onClick={() => removeImageField(index)}
+                        className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors bg-transparent border-none cursor-pointer"
+                      >
+                         <Trash2 size={16} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <button type="button" onClick={addImageField} className="flex items-center text-xs font-medium text-indigo-600 hover:text-indigo-800 transition-colors bg-transparent border-none cursor-pointer">
+                  <Plus size={14} className="mr-1" /> Thêm đường dẫn ảnh
+                </button>
+              </div>
+
             </div>
           </div>
         </div>
@@ -438,6 +721,7 @@ export const CourtDashBoard = () => {
   const [isProcessing, setIsProcessing] = useState(false); 
   const [processAction, setProcessAction] = useState('saving'); 
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isViewLoading, setIsViewLoading] = useState(false); 
 
   const [selectedCourt, setSelectedCourt] = useState(null); 
   const [processCourtName, setProcessCourtName] = useState("");
@@ -489,9 +773,8 @@ export const CourtDashBoard = () => {
           name: c.name,
           address: c.locationDetail,
           phone: c.phoneNumber || "Không có",
-          status: c.status === "ACTIVE" ? "Hoạt động" : "Tạm đóng", // Map status
+          deleted: c.deleted || 0,
           images: c.imgUrl ? [c.imgUrl] : [],
-          subCourtsCount: c.courts ? c.courts.length : 0,
           description: "Chi tiết hệ thống sân..." 
         }));
         setCourts(mappedCourts);
@@ -528,9 +811,43 @@ export const CourtDashBoard = () => {
     setIsDeleteModalOpen(true);
   };
 
-  const handleEditClick = (court) => {
-    setSelectedCourt(court);
-    setIsFormModalOpen(true);
+  const handleEditClick = async (court) => {
+    // Để có đầy đủ dữ liệu khi Edit, gọi API Detail trước
+    setIsProcessing(true);
+    setProcessAction('saving');
+    try {
+      const response = await fetch(`http://localhost:8086/api/v1/court-centers/detail/${court.id}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem('token') || ''}`
+        }
+      });
+      const data = await response.json();
+      
+      if (response.ok && data.status === 200 && data.data) {
+        const detail = data.data;
+        setSelectedCourt({
+          id: detail.courtCenterId,
+          name: detail.name,
+          address: detail.locationDetail,
+          phone: detail.phoneNumber,
+          deleted: detail.deleted,
+          images: detail.images?.map(img => img.imageUrl) || [],
+          description: detail.description,
+          courts: detail.courts || [],
+          slots: detail.slots || [],
+          pricingRules: detail.pricingRules || []
+        });
+        setIsFormModalOpen(true);
+      } else {
+        showNotification("Không thể tải chi tiết để sửa", "error");
+      }
+    } catch (e) {
+      showNotification("Lỗi kết nối", "error");
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleCreateClick = () => {
@@ -538,9 +855,41 @@ export const CourtDashBoard = () => {
     setIsFormModalOpen(true);
   };
 
-  const handleViewClick = (court) => {
-    setSelectedCourt(court);
-    setIsViewModalOpen(true);
+  const handleViewClick = async (court) => {
+    setIsViewLoading(true);
+    try {
+      const response = await fetch(`http://localhost:8086/api/v1/court-centers/detail/${court.id}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem('token') || ''}`
+        }
+      });
+      const data = await response.json();
+      
+      if (response.ok && data.status === 200 && data.data) {
+        const detail = data.data;
+        setSelectedCourt({
+          ...court,
+          name: detail.name || court.name,
+          address: detail.locationDetail || court.address,
+          phone: detail.phoneNumber || court.phone,
+          deleted: detail.deleted !== undefined ? detail.deleted : court.deleted,
+          images: detail.images && detail.images.length > 0 ? detail.images.map(img => img.imageUrl) : court.images,
+          googleMapUrl: detail.googleMapUrl,
+          slots: detail.slots || [],
+          pricingRules: detail.pricingRules || []
+        });
+        setIsViewModalOpen(true);
+      } else {
+        showNotification("Không thể lấy chi tiết sân", "error");
+      }
+    } catch (e) {
+      console.error("Lỗi khi tải chi tiết sân:", e);
+      showNotification("Lỗi kết nối", "error");
+    } finally {
+      setIsViewLoading(false);
+    }
   };
 
   // API XÓA
@@ -552,12 +901,13 @@ export const CourtDashBoard = () => {
     setIsProcessing(true);
 
     try {
-        const response = await fetch(`http://localhost:8086/api/v1/court-centers/${selectedCourt.id}`, {
-            method: "DELETE",
+        const response = await fetch(`http://localhost:8086/api/v1/court-centers/delete`, {
+            method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${localStorage.getItem('token') || ''}`
-            }
+            },
+            body: JSON.stringify([selectedCourt.id])
         });
 
         if (response.ok) {
@@ -574,40 +924,41 @@ export const CourtDashBoard = () => {
     }
   };
 
-  // API LƯU THÔNG TIN
-  const handleSaveCourt = async (formData) => {
+  // API LƯU THÔNG TIN (TẠO MỚI / SỬA)
+  const handleSaveCourt = async (fullDataPayload) => {
     setIsFormModalOpen(false);
-    setProcessCourtName(formData.name);
+    setProcessCourtName(fullDataPayload.name);
     setProcessAction('saving');
     setIsProcessing(true);
 
     try {
-        const payload = {
-            name: formData.name,
-            locationDetail: formData.address,
-            phoneNumber: formData.phone,
-            imgUrl: formData.images[0] || "",
-            status: formData.status === "Hoạt động" ? "ACTIVE" : "INACTIVE"
-        };
-
         let response;
         if (selectedCourt) {
+            // SỬA
+            const updatePayload = {
+                name: fullDataPayload.name,
+                locationDetail: fullDataPayload.address,
+                phoneNumber: fullDataPayload.phone,
+                imgUrl: fullDataPayload.images[0]?.imageUrl || "",
+                status: "ACTIVE" 
+            };
             response = await fetch(`http://localhost:8086/api/v1/court-centers/update/${selectedCourt.id}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${localStorage.getItem('token') || ''}`
                 },
-                body: JSON.stringify(payload)
+                body: JSON.stringify(updatePayload)
             });
         } else {
-            response = await fetch("http://localhost:8086/api/v1/court-centers", {
+            // TẠO MỚI
+            response = await fetch("http://localhost:8086/api/v1/court-centers/create", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${localStorage.getItem('token') || ''}`
                 },
-                body: JSON.stringify(payload)
+                body: JSON.stringify(fullDataPayload)
             });
         }
 
@@ -645,6 +996,13 @@ export const CourtDashBoard = () => {
     <MainLayout>
     <div className="space-y-6 animate-fade-in pb-10 p-6 min-h-screen bg-gray-50 relative">
       
+      {/* Loading Overlay khi View Detail */}
+      {isViewLoading && (
+        <div className="fixed inset-0 z-[9999] bg-white/50 flex items-center justify-center backdrop-blur-[1px]">
+          <Loader2 size={48} className="animate-spin text-indigo-600" />
+        </div>
+      )}
+
       {notification && (
         <ToastNotification message={notification.message} type={notification.type} onClose={() => setNotification(null)} />
       )}
@@ -691,11 +1049,11 @@ export const CourtDashBoard = () => {
         ) : (
         <>
         {courts.map((court) => {
-            const isAvailable = court.status === 'Hoạt động';
+            const isDeleted = court.deleted === 1;
             const imageUrl = court.images.length > 0 ? court.images[0] : 'https://images.unsplash.com/photo-1508609349937-5ec4ae374ebf?auto=format&fit=crop&w=800&q=80';
             
             return (
-          <div key={court.id} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow group relative flex flex-col">
+          <div key={court.id} className={`bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow group relative flex flex-col ${isDeleted ? 'opacity-60 grayscale-[0.5]' : ''}`}>
             
             {/* Ảnh Cover */}
             <div className="h-44 relative bg-gray-200 overflow-hidden">
@@ -703,13 +1061,13 @@ export const CourtDashBoard = () => {
               <div className="absolute inset-0 bg-black/10 group-hover:bg-black/30 transition-colors"></div>
 
               {/* Status Badge */}
-              <div className="absolute top-3 left-3 z-10">
-                <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold uppercase tracking-wide border shadow-sm ${
-                    isAvailable ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-red-100 text-red-700 border-red-200'
-                }`}>
-                    {court.status}
-                </span>
-              </div>
+              {isDeleted && (
+                <div className="absolute top-3 left-3 z-10">
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold uppercase tracking-wide border shadow-sm bg-gray-100 text-gray-500 border-gray-200">
+                      Đã xóa
+                  </span>
+                </div>
+              )}
 
               {/* Actions Overlay */}
               <div className="absolute top-3 right-3 flex gap-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -726,9 +1084,11 @@ export const CourtDashBoard = () => {
             </div>
 
             {/* Thông tin */}
-            <div className="p-4 flex-1 flex flex-col">
-              <h3 className="font-bold text-slate-900 text-base leading-snug line-clamp-1 mb-2" title={court.name}>{court.name}</h3>
-              <div className="space-y-1.5 text-xs text-slate-600 mb-4">
+            <div className="p-4 pb-6 flex-1 flex flex-col">
+              <h3 className="font-bold text-slate-900 text-base leading-snug line-clamp-1 mb-2" title={court.name}>
+                {court.name} {isDeleted && <span className="text-sm text-red-500 font-medium ml-1">(Đã xóa)</span>}
+              </h3>
+              <div className="space-y-1.5 text-xs text-slate-600 mb-2">
                   <div className="flex items-start gap-1.5 line-clamp-2" title={court.address}>
                       <MapPin size={14} className="text-indigo-500 shrink-0 mt-0.5"/>
                       <span>{court.address}</span>
@@ -737,11 +1097,6 @@ export const CourtDashBoard = () => {
                       <Phone size={14} className="text-indigo-500 shrink-0"/>
                       <span className="font-medium">{court.phone}</span>
                   </div>
-              </div>
-              
-              <div className="mt-auto pt-3 border-t border-slate-100 flex justify-between items-center">
-                  <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-2 py-1 rounded-md">ID: {court.id}</span>
-                  <span className="text-sm font-bold text-indigo-600">{court.subCourtsCount} Sân nhỏ</span>
               </div>
             </div>
           </div>
