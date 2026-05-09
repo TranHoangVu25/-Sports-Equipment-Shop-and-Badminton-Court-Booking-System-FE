@@ -14,7 +14,8 @@ import {
   Search,
   CalendarDays,
   MapPin,
-  Clock
+  Clock,
+  Filter
 } from "lucide-react";
 
 import { MainLayout } from "../dashboard/layouts/main-layout"; 
@@ -188,9 +189,11 @@ export const BookingDashBoard = () => {
   // Toast Notification
   const [toast, setToast] = useState({ show: false, type: 'success', message: '' });
 
-  // State Tìm kiếm
+  // State Tìm kiếm và Bộ lọc
   const [searchUser, setSearchUser] = useState("");
   const [appliedSearchUser, setAppliedSearchUser] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
+  const [sortOrder, setSortOrder] = useState("desc");
 
   const showToast = (type, message) => {
     setToast({ show: true, type, message });
@@ -220,11 +223,17 @@ export const BookingDashBoard = () => {
       params.append('page', pageIndex);
       params.append('size', itemsPerPage);
       
-      // Giả sử API nhận tham số userName để tìm kiếm
-      if (appliedSearchUser) params.append('userName', appliedSearchUser);
+      // Tham số Sắp xếp (Sort)
+      params.append('sort', `createdAt,${sortOrder}`);
 
-      // Endpoint giả định cho việc lấy danh sách tất cả Booking của hệ thống
-      const response = await fetch(`http://localhost:8086/api/v1/bookings/all?${params.toString()}`, {
+      // Tham số Tìm kiếm (nếu API có hỗ trợ userName, nếu ko backend tự lo)
+      if (appliedSearchUser) params.append('userName', appliedSearchUser);
+      
+      // Tham số Bộ lọc Trạng thái
+      if (filterStatus) params.append('status', filterStatus);
+
+      // Endpoint mới: Lấy danh sách booking (Giả định api này có thể dùng cho admin bằng cách đổi logic backend hoặc có một param khác)
+      const response = await fetch(`http://localhost:8086/api/v1/bookings/get-user-booking-list?${params.toString()}`, {
           method: 'GET',
           headers: {
               "Content-Type": "application/json",
@@ -233,15 +242,21 @@ export const BookingDashBoard = () => {
       });
 
       if (!response.ok) {
+          showToast('error', 'Lỗi không thể tải danh sách đơn đặt sân.');
           throw new Error("Lỗi khi tải danh sách đơn đặt sân.");
       }
 
-      const data = await response.json();
+      const responseData = await response.json();
 
-      if (data.code === 0 && data.result) {
-          const content = data.result.content || [];
-          setTotalPages(data.result.totalPages || 1);
-          setTotalElements(data.result.totalElements || 0);
+      if (responseData.status === 200 && responseData.data) {
+          const content = responseData.data.content || [];
+          setTotalPages(responseData.data.totalPages || 1);
+          setTotalElements(responseData.data.totalElements || 0);
+
+          // Nếu content rỗng, hiển thị toast thông báo
+          if (content.length === 0) {
+              showToast('error', 'Không tìm thấy đơn đặt sân nào.');
+          }
 
           const mappedBookings = content.map(b => {
               const bookingItems = b.bookingItems || [];
@@ -255,7 +270,7 @@ export const BookingDashBoard = () => {
                   case 'success':
                   case 'paid':
                   case 'confirmed':
-                      displayStatus = 'Thành công';
+                      displayStatus = 'Đã xác nhận';
                       statusColor = 'bg-emerald-100 text-emerald-700 border border-emerald-200';
                       break;
                   case 'pending':
@@ -268,7 +283,7 @@ export const BookingDashBoard = () => {
                       break;
                   case 'cancelled':
                   case 'failed':
-                      displayStatus = 'Đã hủy / Lỗi';
+                      displayStatus = 'Đã hủy';
                       statusColor = 'bg-red-100 text-red-700 border border-red-200';
                       break;
                   default:
@@ -279,7 +294,7 @@ export const BookingDashBoard = () => {
                   id: b.bookingId,
                   rawStatus: rawStatus, 
                   customer: b.userName || `Khách hàng`,
-                  phone: b.phoneNumber || "N/A",
+                  phone: b.courtCenterPhoneNumber || "N/A", // Lấy sdt sân làm sdt tạm theo response
                   courtCenterName: b.courtCenterName || "Hệ thống sân mặc định",
                   courtCenterAddress: b.courtCenterAddress || "",
                   items: bookingItems,
@@ -295,14 +310,17 @@ export const BookingDashBoard = () => {
           });
           setBookings(mappedBookings);
       } else {
+          showToast('error', responseData.message || 'Lỗi dữ liệu trả về từ máy chủ.');
           setBookings([]);
           setTotalElements(0);
       }
     } catch (err) {
       console.error("Error fetching bookings:", err);
-      setError("Bạn chưa có quyền hoặc Lỗi kết nối đến máy chủ.");
+      setError("Có lỗi khi kết nối hoặc tải dữ liệu từ máy chủ.");
       setBookings([]);
       setTotalElements(0);
+      // Hiển thị toast lỗi khi catch
+      showToast('error', 'Lỗi gọi API: Không thể tải danh sách đặt sân.');
     } finally {
       setLoading(false);
     }
@@ -311,7 +329,7 @@ export const BookingDashBoard = () => {
   useEffect(() => {
     fetchBookings();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appliedSearchUser, currentPage, itemsPerPage]);
+  }, [appliedSearchUser, filterStatus, sortOrder, currentPage, itemsPerPage]);
 
   // --- API GỌI XEM CHI TIẾT ĐƠN ĐẶT SÂN ---
   const handleViewDetail = async (booking) => {
@@ -348,7 +366,6 @@ export const BookingDashBoard = () => {
   const handleUpdateStatus = async (booking, isConfirm) => {
     setIsActionLoading(true);
     try {
-      // Giả sử endpoint xử lý trạng thái booking tương tự order
       const response = await fetch(`http://localhost:8086/api/v1/bookings/change-status/${booking.id}?isConfirm=${isConfirm}`, {
         method: 'PUT',
         headers: {
@@ -390,6 +407,8 @@ export const BookingDashBoard = () => {
   const handleResetFilter = () => {
     setSearchUser('');
     setAppliedSearchUser('');
+    setFilterStatus('');
+    setSortOrder('desc');
     setCurrentPage(1);
   };
 
@@ -463,8 +482,9 @@ export const BookingDashBoard = () => {
         </div>
 
         {/* --- FILTER & SEARCH --- */}
-        <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col md:flex-row gap-4 items-end">
-          <div className="flex-1 w-full max-w-md">
+        <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col xl:flex-row gap-4 xl:items-end">
+          {/* Box Tìm Kiếm */}
+          <div className="flex-1 w-full xl:max-w-xs">
             <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5 block">Tìm theo người đặt</label>
             <div className="relative group">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
@@ -477,23 +497,55 @@ export const BookingDashBoard = () => {
                     handleSearchSubmit();
                   }
                 }}
-                placeholder="Nhập tên người đặt sân..." 
+                placeholder="Nhập tên người đặt..." 
                 className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
               />
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          
+          {/* Các nút Select Filters */}
+          <div className="flex flex-col sm:flex-row gap-4 flex-1">
+             {/* Lọc Trạng thái */}
+             <div className="w-full sm:w-40">
+               <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5 block flex items-center"><Filter size={14} className="mr-1"/> Trạng thái</label>
+               <select 
+                 value={filterStatus}
+                 onChange={(e) => { setFilterStatus(e.target.value); setCurrentPage(1); }}
+                 className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+               >
+                 <option value="">Tất cả</option>
+                 <option value="pending">Chờ xử lý</option>
+                 <option value="confirmed">Đã xác nhận</option>
+                 <option value="cancelled">Đã hủy</option>
+               </select>
+             </div>
+
+             {/* Lọc Sort Order */}
+             <div className="w-full sm:w-40">
+               <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5 block">Sắp xếp</label>
+               <select 
+                 value={sortOrder}
+                 onChange={(e) => { setSortOrder(e.target.value); setCurrentPage(1); }}
+                 className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+               >
+                 <option value="desc">Mới nhất trước</option>
+                 <option value="asc">Cũ nhất trước</option>
+               </select>
+             </div>
+          </div>
+
+          <div className="flex items-center gap-2 mt-4 xl:mt-0">
             <button 
               onClick={handleSearchSubmit} 
               className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-all shadow-sm border-none cursor-pointer flex items-center h-[38px]"
             >
-              <Search size={16} className="mr-2" /> Tìm kiếm
+              <Search size={16} className="mr-2" /> Tìm
             </button>
             <button 
               onClick={handleResetFilter} 
               className="px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 rounded-lg text-sm font-medium transition-all shadow-sm cursor-pointer flex items-center h-[38px]"
             >
-              <RefreshCcw size={16} className="mr-2" /> Làm mới
+              <RefreshCcw size={16} className="mr-2" /> Xóa lọc
             </button>
           </div>
         </div>
@@ -618,7 +670,7 @@ export const BookingDashBoard = () => {
             </table>
             )}
             
-            {/* Empty State */}
+            {/* Empty State khi không có dữ liệu */}
             {!loading && bookings.length === 0 && !error && (
                 <div className="flex flex-col items-center justify-center h-64 text-slate-400">
                     <CalendarDays className="w-12 h-12 mb-3 opacity-20" />
