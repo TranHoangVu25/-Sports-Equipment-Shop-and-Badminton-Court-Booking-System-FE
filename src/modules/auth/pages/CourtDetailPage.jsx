@@ -47,6 +47,7 @@ const CustomDatePickerModal = ({ isOpen, initialDate, onClose, onConfirm }) => {
 
   const isDateDisabled = (year, month, day) => {
     const dateToCheck = new Date(year, month, day);
+    // Vô hiệu hóa ngày trong quá khứ và ngày vượt quá maxDate
     return dateToCheck < today || dateToCheck > maxDate;
   };
 
@@ -152,6 +153,7 @@ const BookingTimeline = ({ court, onBack }) => {
   const [timelineData, setTimelineData] = useState(null);
   const [isLoadingTimeline, setIsLoadingTimeline] = useState(false);
   const [showPricingModal, setShowPricingModal] = useState(false);
+  const [occupiedSlots, setOccupiedSlots] = useState([]); // Thêm state lưu giờ đã đặt
 
   const timelineRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -178,10 +180,49 @@ const BookingTimeline = ({ court, onBack }) => {
     setSelectedSlots([]);
   }, [court.id, selectedDate]);
 
+  // GỌI API LẤY DANH SÁCH GIỜ ĐÃ ĐƯỢC ĐẶT (OCCUPIED)
+  useEffect(() => {
+    const fetchOccupiedSlots = async () => {
+      const courtsList = timelineData?.courts || court.courts || [];
+      if (courtsList.length === 0) return;
+
+      const courtIds = courtsList.map(c => c.courtId || c.id).join(',');
+      // Lấy từ 00:00:00 đến 23:59:59 để bao quát toàn bộ khung giờ trong ngày
+      const url = `http://localhost:8086/api/v1/bookings/occupied?courtIds=${courtIds}&date=${selectedDate}&startTime=00:00:00&endTime=23:59:59`;
+
+      try {
+        const token = localStorage.getItem('token');
+        const headers = {
+          'Content-Type': 'application/json',
+        };
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const res = await fetch(url, {
+          method: 'GET',
+          headers: headers
+        });
+        const json = await res.json();
+        if (res.ok && json.status === 200) {
+          setOccupiedSlots(json.data || []);
+        } else {
+          setOccupiedSlots([]);
+        }
+      } catch (err) {
+        console.error("Lỗi fetch occupied slots:", err);
+        setOccupiedSlots([]);
+      }
+    };
+
+    fetchOccupiedSlots();
+  }, [selectedDate, timelineData, court.courts]);
+
+  // ĐÃ FIX: JavaScript getDay() trả về 0 (CN) -> 6 (Thứ 7). API yêu cầu 1 (T2) -> 7 (CN)
   const getDayOfWeekVN = (dateString) => {
     const date = new Date(dateString);
     const day = date.getDay(); 
-    return day === 0 ? 8 : day + 1; 
+    return day === 0 ? 7 : day; 
   };
 
   const currentDow = getDayOfWeekVN(selectedDate);
@@ -223,16 +264,41 @@ const BookingTimeline = ({ court, onBack }) => {
   const checkSlotStatus = (courtId, timeStr) => {
     if (!timelineData || !timelineData.slots) return 'LOCKED'; 
     const formattedTime = timeStr.length === 5 ? `${timeStr}:00` : timeStr;
+    
+    // 1. Kiểm tra giờ mở cửa của sân theo ngày
     const activeSlotsToday = timelineData.slots.filter(s => s.dayOfWeek === currentDow && s.status === 'ACTIVE');
     if (activeSlotsToday.length === 0) return 'LOCKED';
+    
     const isWithinOperatingHours = activeSlotsToday.some(slot => {
       return formattedTime >= slot.startTime && formattedTime < slot.endTime;
     });
     if (!isWithinOperatingHours) return 'LOCKED';
     
-    if (courtId === 13 && (timeStr === '18:00' || timeStr === '18:30' || timeStr === '19:00')) return 'BOOKED';
-    if (courtId === 14 && (timeStr === '17:30' || timeStr === '18:00' || timeStr === '18:30')) return 'BOOKED';
+    // 2. Kiểm tra sân đã đặt (BOOKED) từ API (Khớp courtId và thời gian giao nhau)
+    const isOccupied = occupiedSlots.some(occ => {
+      return occ.courtId === courtId && formattedTime >= occ.startTime && formattedTime < occ.endTime;
+    });
 
+    if (isOccupied) return 'BOOKED';
+
+    // 3. Khóa các khung giờ trong quá khứ (Tránh trường hợp khách chọn giờ đã qua trong ngày)
+    const todayStr = getTodayString();
+    
+    if (selectedDate < todayStr) {
+      return 'LOCKED';
+    } 
+    else if (selectedDate === todayStr) {
+      const now = new Date();
+      const currentHour = String(now.getHours()).padStart(2, '0');
+      const currentMinute = String(now.getMinutes()).padStart(2, '0');
+      const currentTimeString = `${currentHour}:${currentMinute}:00`;
+      
+      if (formattedTime < currentTimeString) {
+        return 'LOCKED';
+      }
+    }
+
+    // Tương lai luôn mở
     return 'AVAILABLE';
   };
 
@@ -299,22 +365,24 @@ const BookingTimeline = ({ court, onBack }) => {
       }
       signatureMap[signature].days.push(parseInt(day));
     });
+
     const finalGroups = Object.values(signatureMap).map(sig => {
       const sortedDays = sig.days.sort((a,b) => a-b);
       let dayLabel = '';
-      const isT2toT6 = [2,3,4,5,6].every(d => sortedDays.includes(d)) && sortedDays.length === 5;
-      const isT7CN = sortedDays.includes(7) && (sortedDays.includes(8) || sortedDays.includes(1)) && sortedDays.length === 2;
+      const isT2toT6 = [1,2,3,4,5].every(d => sortedDays.includes(d)) && sortedDays.length === 5;
+      const isT7CN = sortedDays.includes(6) && sortedDays.includes(7) && sortedDays.length === 2;
       if (isT2toT6) dayLabel = 'T2 - T6';
       else if (isT7CN) dayLabel = 'T7 - CN';
       else if (sortedDays.length === 7) dayLabel = 'T2 - CN';
-      else dayLabel = sortedDays.map(d => (d === 8 || d === 1) ? 'CN' : `T${d}`).join(', ');
+      else dayLabel = sortedDays.map(d => (d === 7) ? 'CN' : `T${d + 1}`).join(', ');
       return { dayLabel, rules: sig.rules };
     });
+
     return (
       <div className="overflow-x-auto w-full bg-white rounded-sm shadow-lg text-gray-800">
         <table className="w-full text-center border-collapse text-[14px]">
           <thead>
-            <tr><th colSpan="3" className="py-3 px-4 font-bold text-[#eb5322] border border-[#eb5322] uppercase tracking-wide bg-white">{court.category}</th></tr>
+            <tr><th colSpan="3" className="py-3 px-4 font-bold text-[#eb5322] border border-[#eb5322] uppercase tracking-wide bg-white">{court.category || 'BẢNG GIÁ SÂN'}</th></tr>
             <tr><th colSpan="3" className="py-3 px-4 font-bold text-[#eb5322] border border-[#eb5322] tracking-wide bg-white">Khách hàng</th></tr>
             <tr className="bg-white">
               <th className="py-3 px-4 font-bold text-[#eb5322] border border-[#eb5322]">Thứ</th>
@@ -334,7 +402,7 @@ const BookingTimeline = ({ court, onBack }) => {
                   <td className="py-3 px-4 border border-[#eb5322] whitespace-nowrap">
                     {formatTimeSlot(rule.startTime)} - {formatTimeSlot(rule.endTime)}
                   </td>
-                  <td className="py-3 px-4 border border-[#eb5322] whitespace-nowrap">
+                  <td className="py-3 px-4 border border-[#eb5322] whitespace-nowrap font-bold">
                     {formatPrice(rule.pricePerHour)}
                   </td>
                 </tr>
@@ -562,18 +630,16 @@ const CourtDetailPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('Dịch vụ'); 
-  const TABS = ['Thông tin', 'Dịch vụ', 'Hình ảnh', 'Điều khoản & quy định']; // Đã xóa tab Đánh giá
+  const TABS = ['Thông tin', 'Dịch vụ', 'Hình ảnh', 'Điều khoản & quy định']; 
   const [showBookingTimeline, setShowBookingTimeline] = useState(false);
 
   const formatPrice = (price) => price ? Number(price).toLocaleString('vi-VN') + ' ₫' : '0 ₫';
-  const getDayName = (dayOfWeek) => (dayOfWeek === 8 || dayOfWeek === 1) ? 'Chủ nhật' : `Thứ ${dayOfWeek}`;
   const formatTimeSlot = (timeStr) => {
     if (!timeStr) return '';
     if (timeStr === '23:59:00' || timeStr === '24:00:00') return '24h';
     return timeStr.substring(0, 5).replace(/^0/, '').replace(':00', 'h');
   };
 
-  // Helper hàm lấy ký tự đầu của tên sân để làm Logo chuyên nghiệp
   const getInitials = (name) => {
     if (!name) return "VN";
     const words = name.trim().split(/\s+/);
@@ -649,12 +715,12 @@ const CourtDetailPage = () => {
       finalGroups[dKey] = Object.values(signatureMap).map(sig => {
         const sortedDays = sig.days.sort((a,b) => a-b);
         let dayLabel = '';
-        const isT2toT6 = [2,3,4,5,6].every(d => sortedDays.includes(d)) && sortedDays.length === 5;
-        const isT7CN = sortedDays.includes(7) && (sortedDays.includes(8) || sortedDays.includes(1)) && sortedDays.length === 2;
+        const isT2toT6 = [1,2,3,4,5].every(d => sortedDays.includes(d)) && sortedDays.length === 5;
+        const isT7CN = sortedDays.includes(6) && sortedDays.includes(7) && sortedDays.length === 2;
         if (isT2toT6) dayLabel = 'T2 - T6';
         else if (isT7CN) dayLabel = 'T7 - CN';
         else if (sortedDays.length === 7) dayLabel = 'T2 - CN';
-        else dayLabel = sortedDays.map(d => (d === 8 || d === 1) ? 'CN' : `T${d}`).join(', ');
+        else dayLabel = sortedDays.map(d => (d === 7) ? 'CN' : `T${d + 1}`).join(', ');
         return { dayLabel, rules: sig.rules };
       });
     });
@@ -663,7 +729,7 @@ const CourtDetailPage = () => {
       <div className="overflow-x-auto w-full mb-8">
         <table className="w-full text-center border-collapse border border-[#eb5322] text-[14px]">
           <thead>
-            <tr><th colSpan="3" className="py-3 px-4 font-bold text-[#eb5322] border border-[#eb5322] uppercase tracking-wide bg-white">{court.category}</th></tr>
+            <tr><th colSpan="3" className="py-3 px-4 font-bold text-[#eb5322] border border-[#eb5322] uppercase tracking-wide bg-white">{court.category || 'BẢNG GIÁ SÂN'}</th></tr>
             <tr className="bg-white">
               <th className="py-3 px-4 font-bold text-[#eb5322] border border-[#eb5322]">Thứ</th>
               <th className="py-3 px-4 font-bold text-[#eb5322] border border-[#eb5322]">Khung giờ</th>
@@ -677,7 +743,7 @@ const CourtDetailPage = () => {
                   <tr key={`${dKey}-${g.dayLabel}-${rIdx}`} className="bg-white text-gray-800">
                     {rIdx === 0 && <td rowSpan={g.rules.length} className="py-3 px-4 border border-[#eb5322] align-middle whitespace-nowrap font-medium">{g.dayLabel}</td>}
                     <td className="py-3 px-4 border border-[#eb5322] whitespace-nowrap">{formatTimeSlot(rule.startTime)} - {formatTimeSlot(rule.endTime)}</td>
-                    <td className="py-3 px-4 border border-[#eb5322] whitespace-nowrap">{formatPrice(rule.pricePerHour)}</td>
+                    <td className="py-3 px-4 border border-[#eb5322] whitespace-nowrap font-bold">{formatPrice(rule.pricePerHour)}</td>
                   </tr>
                 ))
               ))

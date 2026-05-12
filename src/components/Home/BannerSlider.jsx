@@ -8,7 +8,6 @@ const bannerImages = [
   "https://cdn.shopvnb.com/img/1920x640/uploads/slider/1000z-launch-website-banner_1695177885.webp",
   "https://cdn.shopvnb.com/img/1920x640/uploads/slider/grpht-thrttl_1759089897.webp",
   "https://cdn.shopvnb.com/img/1920x640/uploads/slider/62-1-_1764612898.webp",
-  "https://cdn.shopvnb.com/img/1920x640/uploads/slider/vnb_1772396342.webp",
   "https://cdn.shopvnb.com/img/1920x640/uploads/slider/ynx-eclp-banner_1695178004.webp"
 ];
 

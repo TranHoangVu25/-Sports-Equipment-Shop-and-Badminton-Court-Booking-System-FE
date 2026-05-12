@@ -69,7 +69,7 @@ const ProfileOverView = ({ userData, onEdit }) => {
       }
       setIsLoadingBookings(true);
       try {
-        const response = await fetch(`http://localhost:8086/api/v1/bookings/get-user-booking-list?page=${currentBookingPage - 1}`, {
+        const response = await fetch(`http://localhost:8086/api/v1/bookings/get-user-booking-list?page=${currentBookingPage - 1}&size=10`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -108,6 +108,7 @@ const ProfileOverView = ({ userData, onEdit }) => {
     switch (status?.toLowerCase()) {
       case 'success':
       case 'paid':
+      case 'confirmed':
         return <span className="text-gray-800">Thành công</span>;
       case 'process':
       case 'processing': 

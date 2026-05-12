@@ -1,8 +1,4 @@
-import {
-    MapPin,
-    MessageCircle,
-    ShoppingBag
-} from 'lucide-react';
+import React from 'react';
 
 const FooterContent = () => {
   return (
@@ -64,34 +60,10 @@ const FooterContent = () => {
   );
 };
 
-const FloatingActions = () => {
-  return (
-    <>
-      <div className="fixed bottom-6 left-6 z-50">
-        <button className="!appearance-none !bg-gray-800 !text-white px-4 py-3 !rounded-full shadow-lg flex items-center space-x-2 hover:!bg-gray-700 transition-colors !border !border-gray-600 focus:!outline-none">
-          <ShoppingBag size={18} className="!text-[#eb5322]" />
-          <span className="text-sm font-semibold">Xem giỏ hàng (0)</span>
-        </button>
-      </div>
-      <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end space-y-3">
-        <button className="!appearance-none !bg-blue-500 !text-white p-3 !rounded-full shadow-lg hover:!bg-blue-600 transition-colors w-12 h-12 flex items-center justify-center relative group !border-none focus:!outline-none">
-          <MessageCircle size={24} />
-          <span className="absolute -top-8 right-0 !bg-gray-800 !text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">Chat Zalo</span>
-        </button>
-        <button className="!appearance-none !bg-blue-500 !text-white px-5 py-2.5 !rounded-full shadow-lg flex items-center space-x-2 hover:!bg-blue-600 transition-colors !border-none focus:!outline-none">
-          <MapPin size={18} />
-          <span className="text-sm font-semibold">Hệ thống cửa hàng</span>
-        </button>
-      </div>
-    </>
-  );
-};
-
 // Main Footer Component xuất ra để dùng
 const Footer = () => (
   <>
     <FooterContent />
-    <FloatingActions />
   </>
 );
 

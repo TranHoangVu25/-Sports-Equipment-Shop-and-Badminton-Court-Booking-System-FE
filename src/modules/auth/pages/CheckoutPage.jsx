@@ -336,68 +336,6 @@ const CheckoutPage = () => {
                 </label>
               </div>
 
-              {/* Các nút thanh toán bên thứ 3 */}
-              <div className="space-y-2.5 mb-6">
-                <button className="w-full bg-[#e3001b] hover:bg-[#cc0018] text-white py-2 rounded-sm transition-colors border-none cursor-pointer flex flex-col items-center justify-center h-14 shadow-sm">
-                  <span className="font-bold text-[13px] uppercase tracking-wide">Thanh toán qua thẻ</span>
-                  <span className="text-[10px] font-normal mt-0.5">Visa, Master, JCB</span>
-                </button>
-                
-                <button className="w-full bg-[#2084d9] hover:bg-[#1b75c2] text-white py-2 rounded-sm transition-colors border-none cursor-pointer flex flex-col items-center justify-center h-14 shadow-sm">
-                  <span className="font-bold text-[13px] uppercase tracking-wide">Trả góp qua thẻ</span>
-                  <span className="text-[10px] font-normal mt-0.5">Visa, Master, JCB</span>
-                </button>
-                
-                <button className="w-full bg-[#fae30c] hover:bg-[#f0d908] text-gray-900 py-2 rounded-sm transition-colors border-none cursor-pointer flex flex-col items-center justify-center h-14 shadow-sm">
-                  <span className="font-bold text-[13px] uppercase tracking-wide">Mua ngay - Trả sau</span>
-                  <div className="flex items-center gap-2 mt-1">
-                     <span className="text-[#e3001b] font-extrabold text-[10px] italic leading-tight">HOME<br/>PayLater</span>
-                     <span className="text-[#00c9a7] font-extrabold text-[11px] leading-tight">Fundiin<br/><span className="text-[8px] font-normal text-gray-600 block leading-[0.5]">Pay Later</span></span>
-                  </div>
-                </button>
-              </div>
-
-              {/* Khung Khuyến Mãi Thanh Toán */}
-              <div className="border border-gray-200 rounded-sm">
-                <div className="bg-gray-100 text-center py-2.5 px-2 border-b border-gray-200 flex flex-col items-center justify-center">
-                   <h4 className="text-[12px] font-bold text-[#eb5322] uppercase m-0 flex items-center justify-center gap-1.5 flex-wrap">
-                     ƯU ĐÃI KHI THANH TOÁN 
-                     <span className="text-[#e3001b] italic tracking-tight">HOME PayLater</span> 
-                     <span className="text-[#00c9a7] tracking-tight">Fundiin</span>
-                   </h4>
-                   <p className="text-[10px] text-[#2084d9] m-0 mt-0.5">(SỬ DỤNG KHI XÁC NHẬN KHOẢN VAY TRÊN TRANG CỦA TỔ CHỨC TÀI CHÍNH)</p>
-                </div>
-                
-                <div className="p-3 divide-y divide-gray-100 bg-white">
-                  <div className="py-3 flex items-start gap-3">
-                     <span className="text-[#e3001b] font-extrabold text-[10px] italic flex-shrink-0 leading-tight w-12 text-center">HOME<br/>PayLater</span>
-                     <p className="text-[11px] text-gray-800 flex-1 leading-snug font-medium m-0 pt-0.5">Giảm 10% - tối đa 500.000đ khi chọn kỳ hạn 6 & 12 tháng cho khách hàng mới</p>
-                     <div className="flex-shrink-0 bg-[#eb5322] text-white text-[9px] font-bold w-10 h-10 rounded-full flex items-center justify-center text-center shadow-sm relative pt-1">
-                       <span className="absolute -top-1 left-1/2 transform -translate-x-1/2 text-yellow-300">🔥</span>
-                       <span className="leading-[1.1]">ƯU<br/>ĐÃI<br/>HOT</span>
-                     </div>
-                  </div>
-                  <div className="py-3 flex items-start gap-3">
-                     <span className="text-[#e3001b] font-extrabold text-[10px] italic flex-shrink-0 leading-tight w-12 text-center">HOME<br/>PayLater</span>
-                     <p className="text-[11px] text-gray-800 flex-1 leading-snug font-medium m-0 pt-0.5">Giảm 3% - tối đa 100.000đ với kỳ hạn 3 tháng cho khách hàng mới</p>
-                     <div className="flex-shrink-0 bg-[#eb5322] text-white text-[9px] font-bold w-10 h-10 rounded-full flex items-center justify-center text-center shadow-sm relative pt-1">
-                       <span className="absolute -top-1 left-1/2 transform -translate-x-1/2 text-yellow-300">🔥</span>
-                       <span className="leading-[1.1]">ƯU<br/>ĐÃI<br/>HOT</span>
-                     </div>
-                  </div>
-                  <div className="py-3 flex items-start gap-3">
-                     <span className="text-[#e3001b] font-extrabold text-[10px] italic flex-shrink-0 leading-tight w-12 text-center">HOME<br/>PayLater</span>
-                     <p className="text-[11px] text-gray-800 flex-1 leading-snug font-medium m-0 pt-0.5">Giảm 3% - tối đa 100.000đ với kỳ hạn 3 tháng cho khách hàng đã phát sinh đơn hàng HPL</p>
-                     <div className="flex-shrink-0 bg-[#eb5322] text-white text-[8px] font-bold w-12 h-12 rounded-full flex items-center justify-center text-center shadow-sm leading-[1.1]">
-                       SIÊU<br/>MỚI,<br/>SIÊU<br/>HOT
-                     </div>
-                  </div>
-                </div>
-                <div className="text-right px-3 py-1.5 bg-white border-t border-gray-100">
-                  <span className="text-[9px] text-gray-400 italic">Powered by </span>
-                  <span className="text-[10px] font-bold text-gray-700 tracking-tight">baokim</span>
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -453,19 +391,6 @@ const CheckoutPage = () => {
           </div>
 
           <div className="border-t border-gray-200 my-4"></div>
-
-          {/* <div className="flex gap-2 mb-6">
-            <input 
-              type="text" 
-              placeholder="Mã giảm giá" 
-              className="flex-1 px-3 py-2.5 border border-gray-300 rounded-sm text-sm focus:outline-none focus:border-[#5bc0de] transition-colors bg-white"
-            />
-            <button className="bg-[#5bc0de] hover:bg-[#46b8da] text-white px-5 py-2.5 rounded-sm text-[13px] font-medium transition-colors border-none cursor-pointer">
-              Sử dụng
-            </button>
-          </div> */}
-
-          {/* <div className="border-t border-gray-200 my-4"></div> */}
 
           <div className="flex justify-between items-center mb-8">
             <span className="text-[15px] text-gray-600">Tổng cộng</span>
