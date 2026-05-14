@@ -1,7 +1,7 @@
 // Import Header và Footer vào. 
 // Chú ý: Hãy sửa lại đường dẫn '../components/Header' cho khớp với thư mục bạn đang lưu Header và Footer nhé!
-import Footer from '../components/Footer/Footer';
-import Header from '../components/Header/Header';
+import Footer from '../components/footer/Footer';
+import Header from '../components/header/Header';
 
 
 const MainLayout = ({ children }) => {
