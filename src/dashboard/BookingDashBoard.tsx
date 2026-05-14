@@ -178,32 +178,32 @@ const BookingDetailModal = ({ booking, isOpen, onClose }) => {
 };
 
 export const BookingDashBoard = () => {
-  const [bookings, setBookings] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [bookings, setBookings] = useState<any>([]);
+  const [loading, setLoading] = useState<any>(true);
+  const [error, setError] = useState<any>(null);
 
-  const [selectedBooking, setSelectedBooking] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isActionLoading, setIsActionLoading] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState<any>(null);
+  const [isModalOpen, setIsModalOpen] = useState<any>(false);
+  const [isActionLoading, setIsActionLoading] = useState<any>(false);
   
   // Toast Notification
-  const [toast, setToast] = useState({ show: false, type: 'success', message: '' });
+  const [toast, setToast] = useState<any>({ show: false, type: 'success', message: '' });
 
   // State Tìm kiếm và Bộ lọc
-  const [searchUser, setSearchUser] = useState("");
-  const [appliedSearchUser, setAppliedSearchUser] = useState("");
-  const [filterStatus, setFilterStatus] = useState("");
-  const [sortOrder, setSortOrder] = useState("desc");
+  const [searchUser, setSearchUser] = useState<any>("");
+  const [appliedSearchUser, setAppliedSearchUser] = useState<any>("");
+  const [filterStatus, setFilterStatus] = useState<any>("");
+  const [sortOrder, setSortOrder] = useState<any>("desc");
 
   const showToast = (type, message) => {
     setToast({ show: true, type, message });
   };
 
   // Pagination State API Backend
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10); 
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalElements, setTotalElements] = useState(0);
+  const [currentPage, setCurrentPage] = useState<any>(1);
+  const [itemsPerPage, setItemsPerPage] = useState<any>(10); 
+  const [totalPages, setTotalPages] = useState<any>(1);
+  const [totalElements, setTotalElements] = useState<any>(0);
 
   const getAuthHeader = () => {
     const token = localStorage.getItem('token');
@@ -220,8 +220,8 @@ export const BookingDashBoard = () => {
 
       const pageIndex = currentPage - 1; 
       const params = new URLSearchParams();
-      params.append('page', pageIndex);
-      params.append('size', itemsPerPage);
+      params.append('page', String(pageIndex));
+      params.append('size', String(itemsPerPage));
       
       // Tham số Sắp xếp (Sort)
       params.append('sort', `createdAt,${sortOrder}`);

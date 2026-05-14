@@ -59,7 +59,7 @@ const ConfirmDeleteModal = ({ isOpen, onClose, onConfirm, itemCode }) => {
 
 // --- Promotion Form Modal ---
 const PromotionFormModal = ({ isOpen, onClose, onSave, initialData }) => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<any>({
     code: "",
     value: "",
     type: "amount", // or 'percent'
@@ -67,7 +67,7 @@ const PromotionFormModal = ({ isOpen, onClose, onSave, initialData }) => {
     expiry: "",
     status: "active" // 'active' (unused) or 'inactive' (used/expired)
   });
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState<any>({});
 
   // Reset or Populate form when modal opens/closes
   useEffect(() => {
@@ -110,7 +110,7 @@ const PromotionFormModal = ({ isOpen, onClose, onSave, initialData }) => {
   };
 
   const validate = () => {
-    const newErrors = {};
+    const newErrors: any = {};
     if (!formData.code.trim()) newErrors.code = "Coupon code is required";
     if (!formData.value) {
       newErrors.value = "Discount value is required";
@@ -275,16 +275,16 @@ export const PromotionsDashBoard = () => {
     return items;
   };
 
-  const [promotions, setPromotions] = useState(generateMockPromotions());
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [promotions, setPromotions] = useState<any>(generateMockPromotions());
+  const [currentPage, setCurrentPage] = useState<any>(1);
+  const [itemsPerPage, setItemsPerPage] = useState<any>(10);
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedPromo, setSelectedPromo] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState<any>(false);
+  const [selectedPromo, setSelectedPromo] = useState<any>(null);
   
   // State for Delete Modal
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [promoToDelete, setPromoToDelete] = useState(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<any>(false);
+  const [promoToDelete, setPromoToDelete] = useState<any>(null);
 
   // Pagination Logic
   const indexOfLastItem = currentPage * itemsPerPage;

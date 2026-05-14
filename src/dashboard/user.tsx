@@ -55,55 +55,55 @@ const ToastNotification = ({ message, type, onClose }) => {
 };
 
 export const UserDashBoard = () => {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [users, setUsers] = useState<any>([]);
+  const [loading, setLoading] = useState<any>(true);
+  const [error, setError] = useState<any>(null);
 
   // State Tìm kiếm và Lọc
-  const [searchTerm, setSearchTerm] = useState("");
-  const [roleFilter, setRoleFilter] = useState("Tất cả");
-  const [statusFilter, setStatusFilter] = useState("Tất cả");
+  const [searchTerm, setSearchTerm] = useState<any>("");
+  const [roleFilter, setRoleFilter] = useState<any>("Tất cả");
+  const [statusFilter, setStatusFilter] = useState<any>("Tất cả");
 
   // Phân trang
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [currentPage, setCurrentPage] = useState<any>(1);
+  const [itemsPerPage, setItemsPerPage] = useState<any>(10);
 
   // State Thống kê (từ API)
-  const [dashboardStats, setDashboardStats] = useState({
+  const [dashboardStats, setDashboardStats] = useState<any>({
     totalUsers: 0,
     newUsers: 0,
     lockedUsers: 0,
   });
 
-  const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
-  const [isEditUserModalOpen, setIsEditUserModalOpen] = useState(false);
+  const [isAddUserModalOpen, setIsAddUserModalOpen] = useState<any>(false);
+  const [isEditUserModalOpen, setIsEditUserModalOpen] = useState<any>(false);
 
   // View details modal
-  const [isViewUserModalOpen, setIsViewUserModalOpen] = useState(false);
-  const [viewUser, setViewUser] = useState(null);
-  const [isViewLoading, setIsViewLoading] = useState(false); 
+  const [isViewUserModalOpen, setIsViewUserModalOpen] = useState<any>(false);
+  const [viewUser, setViewUser] = useState<any>(null);
+  const [isViewLoading, setIsViewLoading] = useState<any>(false); 
 
   // Block confirm modal
-  const [isBlockConfirmOpen, setIsBlockConfirmOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [isBlockConfirmOpen, setIsBlockConfirmOpen] = useState<any>(false);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
 
   // State quản lý ẩn/hiện mật khẩu
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState<any>(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState<any>(false);
 
   // Toast Notification State
-  const [notification, setNotification] = useState(null);
+  const [notification, setNotification] = useState<any>(null);
 
   // --- FORM STATE & VALIDATION ---
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<any>({
     fullName: "",
     email: "",
     role: "Người dùng",
     password: "",
     confirmPassword: ""
   });
-  const [formErrors, setFormErrors] = useState({});
-  const [isDetailLoading, setIsDetailLoading] = useState(false); 
+  const [formErrors, setFormErrors] = useState<any>({});
+  const [isDetailLoading, setIsDetailLoading] = useState<any>(false); 
 
   // --- LẤY TOKEN GẮN VÀO HEADER ---
   const getAuthHeader = () => {
@@ -329,7 +329,7 @@ export const UserDashBoard = () => {
   };
 
   const validateForm = (isEdit = false) => {
-    const errors = {};
+    const errors: any = {};
     if (!formData.fullName.trim()) errors.fullName = "Vui lòng nhập họ và tên";
     if (!formData.email.trim()) {
         errors.email = "Vui lòng nhập email";
@@ -359,7 +359,7 @@ export const UserDashBoard = () => {
         try {
             if (!isEdit) {
                 // CREATE USER
-                const payload = {
+                const payload: any = {
                     email: formData.email,
                     fullName: formData.fullName,
                     encryptedPassword: formData.password,
@@ -387,7 +387,7 @@ export const UserDashBoard = () => {
                 }
             } else {
                 // UPDATE USER
-                const payload = {
+                const payload: any = {
                     email: formData.email,
                     fullName: formData.fullName,
                     role: formData.role === "Người dùng" ? "customer" : "admin"

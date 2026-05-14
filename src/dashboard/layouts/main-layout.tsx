@@ -14,8 +14,8 @@ import {
 } from "lucide-react";
 
 export const MainLayout = ({ children }) => {
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState<any>(false);
+  const [isLoggingOut, setIsLoggingOut] = useState<any>(false);
 
   // Định nghĩa màu sắc menu khi active (Chuyển sang màu Indigo/Xanh)
   const menuClass = ({ isActive }) =>

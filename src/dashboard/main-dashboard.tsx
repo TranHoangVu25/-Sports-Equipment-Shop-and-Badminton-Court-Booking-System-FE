@@ -18,16 +18,16 @@ import { Link } from 'react-router-dom';
 // --- COMPONENT BIỂU ĐỒ DOANH THU ĐỘC LẬP ---
 const RevenueChart = ({ title, icon, apiBaseUrl, primaryColor = "#4f46e5" }) => {
   // Mỗi instance của component này sẽ có state riêng, không dùng chung
-  const [timeRange, setTimeRange] = useState('Tháng'); // 'Tháng' -> type=0, 'Năm' -> type=1
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+  const [timeRange, setTimeRange] = useState<any>('Tháng'); // 'Tháng' -> type=0, 'Năm' -> type=1
+  const [selectedYear, setSelectedYear] = useState<any>(new Date().getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState<any>(new Date().getMonth() + 1);
   
-  const [revenueData, setRevenueData] = useState([]);
-  const [totalRevenue, setTotalRevenue] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
+  const [revenueData, setRevenueData] = useState<any>([]);
+  const [totalRevenue, setTotalRevenue] = useState<any>(0);
+  const [isLoading, setIsLoading] = useState<any>(false);
   
-  const [zoomLevel, setZoomLevel] = useState(1);
-  const [hoveredPoint, setHoveredPoint] = useState(null);
+  const [zoomLevel, setZoomLevel] = useState<any>(1);
+  const [hoveredPoint, setHoveredPoint] = useState<any>(null);
 
   const fetchRevenue = useCallback(async () => {
     setIsLoading(true);

@@ -94,7 +94,7 @@ const ToastNotification = ({ message, type, onClose }) => {
 
 // --- Product Detail Modal ---
 const ProductDetailModal = ({ isOpen, onClose, product }) => {
-  const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedImage, setSelectedImage] = useState<any>(null);
 
   useEffect(() => {
     if (isOpen && product && product.images && product.images.length > 0) {
@@ -297,13 +297,13 @@ const ConfirmDeleteModal = ({ isOpen, onClose, onConfirm, productName }) => {
  * --- PRODUCT FORM MODAL (Create & Edit) ---
  */
 const ProductFormModal = ({ isOpen, onClose, onSave, initialData }) => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<any>({
     name: "", description: "", price: "", status: "Còn hàng", brand: "", mainCategory: "", subCategory: ""
   });
 
-  const [images, setImages] = useState([""]);
-  const [variants, setVariants] = useState([{ sku: "", size: "Default", quantity: 10 }]);
-  const [errors, setErrors] = useState({}); 
+  const [images, setImages] = useState<any>([""]);
+  const [variants, setVariants] = useState<any>([{ sku: "", size: "Default", quantity: 10 }]);
+  const [errors, setErrors] = useState<any>({}); 
 
   // Lọc ra SubCategory tương ứng với MainCategory được chọn
   const availableSubs = formData.mainCategory 
@@ -376,7 +376,7 @@ const ProductFormModal = ({ isOpen, onClose, onSave, initialData }) => {
   };
 
   const validateForm = () => {
-    const newErrors = {};
+    const newErrors: any = {};
     if (!formData.name.trim()) newErrors.name = "Vui lòng nhập tên sản phẩm";
     if (!formData.price || isNaN(formData.price) || Number(formData.price) < 0) {
       newErrors.price = "Vui lòng nhập giá hợp lệ";
@@ -591,35 +591,35 @@ const ProductFormModal = ({ isOpen, onClose, onSave, initialData }) => {
 };
 
 export const ProductDashBoard = () => {
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [products, setProducts] = useState<any>([]);
+  const [loading, setLoading] = useState<any>(true);
+  const [error, setError] = useState<any>(null);
   
   // States Pagination & Info API
-  const [totalItems, setTotalItems] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState<any>(0);
+  const [totalPages, setTotalPages] = useState<any>(1);
 
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [isFormModalOpen, setIsFormModalOpen] = useState(false); 
-  const [isProcessing, setIsProcessing] = useState(false); 
-  const [processAction, setProcessAction] = useState('saving'); 
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<any>(false);
+  const [isFormModalOpen, setIsFormModalOpen] = useState<any>(false); 
+  const [isProcessing, setIsProcessing] = useState<any>(false); 
+  const [processAction, setProcessAction] = useState<any>('saving'); 
   
-  const [selectedProduct, setSelectedProduct] = useState(null); 
-  const [processProductName, setProcessProductName] = useState("");
+  const [selectedProduct, setSelectedProduct] = useState<any>(null); 
+  const [processProductName, setProcessProductName] = useState<any>("");
 
-  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-  const [viewProduct, setViewProduct] = useState(null);
+  const [isViewModalOpen, setIsViewModalOpen] = useState<any>(false);
+  const [viewProduct, setViewProduct] = useState<any>(null);
 
   // Bộ lọc
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterMainCategory, setFilterMainCategory] = useState(""); 
-  const [filterSubCategory, setFilterSubCategory] = useState(""); 
+  const [searchQuery, setSearchQuery] = useState<any>("");
+  const [filterMainCategory, setFilterMainCategory] = useState<any>(""); 
+  const [filterSubCategory, setFilterSubCategory] = useState<any>(""); 
 
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState<any>(1);
   const itemsPerPage = 12;
 
   // Toast Notification State
-  const [notification, setNotification] = useState(null);
+  const [notification, setNotification] = useState<any>(null);
 
   const showNotification = (message, type = 'success') => {
     setNotification({ message, type });
@@ -636,8 +636,8 @@ export const ProductDashBoard = () => {
       if (filterMainCategory) params.append('mainCategory', filterMainCategory);
       if (filterSubCategory) params.append('subCategory', filterSubCategory);
       
-      params.append('page', currentPage);
-      params.append('limit', itemsPerPage);
+      params.append('page', String(currentPage));
+      params.append('limit', String(itemsPerPage));
 
       const response = await fetch(`http://localhost:8086/api/v1/search?${params.toString()}`, {
         method: "GET",

@@ -345,7 +345,7 @@ const ConversationsTable = ({
           <tbody className="bg-white divide-y divide-gray-200">
             {conversations.length === 0 && (
               <tr>
-                <td colSpan="7" className="px-6 py-8 text-center text-sm text-gray-500">
+                <td colSpan={7} className="px-6 py-8 text-center text-sm text-gray-500">
                   <div className="flex flex-col items-center justify-center">
                     <MessagesSquare size={48} className="text-gray-300 mb-2" />
                     <p className="text-lg font-medium text-gray-600">No conversations found</p>
@@ -431,7 +431,7 @@ const ConversationsTable = ({
 };
 
 const ConversationDetailModal = ({ conversation, onClose }) => {
-  const [isChatExpanded, setIsChatExpanded] = useState(false);
+  const [isChatExpanded, setIsChatExpanded] = useState<any>(false);
   if (!conversation) return null;
   const messages = conversation.messages || [];
   const isAnalyzed = conversation.analyzed === 2;
@@ -539,10 +539,10 @@ const ErrorBanner = ({ message, onClose }) => {
 
 // --- NEW COMPONENT: Advanced Analysis Modal ---
 const AdvancedAnalysisModal = ({ isOpen, onClose, showNotification }) => {
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [isSending, setIsSending] = useState(false); // State for sending ads process
+  const [data, setData] = useState<any>([]);
+  const [loading, setLoading] = useState<any>(false);
+  const [error, setError] = useState<any>(null);
+  const [isSending, setIsSending] = useState<any>(false); // State for sending ads process
 
   useEffect(() => {
     if (isOpen) {
@@ -684,28 +684,28 @@ const AdvancedAnalysisModal = ({ isOpen, onClose, showNotification }) => {
 // ===================================================================================
 
 export const ChatbotDashboard = () => {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [overviewData, setOverviewData] = useState(null);
-  const [showErrorBanner, setShowErrorBanner] = useState(true);
+  const [loading, setLoading] = useState<any>(true);
+  const [error, setError] = useState<any>(null);
+  const [overviewData, setOverviewData] = useState<any>(null);
+  const [showErrorBanner, setShowErrorBanner] = useState<any>(true);
   
   // === STATE CÁC BỘ LỌC ===
-  const [statusFilter, setStatusFilter] = useState(0); 
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [statusFilter, setStatusFilter] = useState<any>(0); 
+  const [startDate, setStartDate] = useState<any>('');
+  const [endDate, setEndDate] = useState<any>('');
   
-  const [selectedConversation, setSelectedConversation] = useState(null);
-  const [confirmationState, setConfirmationState] = useState({ isOpen: false, type: null, data: null, title: '', message: '' });
+  const [selectedConversation, setSelectedConversation] = useState<any>(null);
+  const [confirmationState, setConfirmationState] = useState<any>({ isOpen: false, type: null, data: null, title: '', message: '' });
   
   // === STATE ADVANCED ANALYSIS ===
-  const [isAdvancedAnalysisModalOpen, setIsAdvancedAnalysisModalOpen] = useState(false);
+  const [isAdvancedAnalysisModalOpen, setIsAdvancedAnalysisModalOpen] = useState<any>(false);
 
   // === STATE NOTIFICATION ===
-  const [notification, setNotification] = useState(null);
+  const [notification, setNotification] = useState<any>(null);
 
   // === STATE CHO PHÂN TRANG ===
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [currentPage, setCurrentPage] = useState<any>(1);
+  const [itemsPerPage, setItemsPerPage] = useState<any>(10);
   
   const isInitialMount = useRef(true);
 

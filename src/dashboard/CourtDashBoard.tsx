@@ -55,7 +55,7 @@ const ToastNotification = ({ message, type, onClose }) => {
 
 // --- Court Detail Modal ---
 const CourtDetailModal = ({ isOpen, onClose, court }) => {
-  const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedImage, setSelectedImage] = useState<any>(null);
 
   useEffect(() => {
     if (isOpen && court && court.images && court.images.length > 0) {
@@ -81,13 +81,13 @@ const CourtDetailModal = ({ isOpen, onClose, court }) => {
         return <div className="text-sm text-gray-500 italic p-2">Chưa có thông tin bảng giá.</div>;
     }
 
-    const daysMap = {};
+    const daysMap: any = {};
     court.pricingRules.forEach(rule => {
       if (!daysMap[rule.dayOfWeek]) daysMap[rule.dayOfWeek] = [];
       daysMap[rule.dayOfWeek].push(rule);
     });
 
-    const signatureMap = {};
+    const signatureMap: any = {};
     Object.keys(daysMap).forEach(day => {
       const rules = daysMap[day].sort((a,b) => a.startTime.localeCompare(b.startTime));
       // Tạo chuỗi signature để nhóm các ngày có cấu hình giống hệt nhau
@@ -98,7 +98,7 @@ const CourtDetailModal = ({ isOpen, onClose, court }) => {
       signatureMap[signature].days.push(parseInt(day));
     });
 
-    const finalGroups = Object.values(signatureMap).map(sig => {
+    const finalGroups = (Object.values(signatureMap) as any[]).map((sig: any) => {
       const sortedDays = sig.days.sort((a,b) => a-b);
       let dayLabel = '';
       
@@ -309,18 +309,18 @@ const CourtFormModal = ({ isOpen, onClose, onSave, initialData }) => {
     { value: 7, label: 'CN' },
   ];
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<any>({
     name: "", address: "", phone: "", description: "",
     numberOfCourts: 1,
     openTime: "05:00",
     closeTime: "23:00"
   });
   
-  const [images, setImages] = useState([""]);
-  const [pricingRules, setPricingRules] = useState([
+  const [images, setImages] = useState<any>([""]);
+  const [pricingRules, setPricingRules] = useState<any>([
     { id: Date.now(), days: [1,2,3,4,5,6,7], startTime: "05:00", endTime: "23:00", pricePerHour: 100000 }
   ]);
-  const [errors, setErrors] = useState({}); 
+  const [errors, setErrors] = useState<any>({}); 
 
   useEffect(() => {
     if (isOpen) {
@@ -347,7 +347,7 @@ const CourtFormModal = ({ isOpen, onClose, onSave, initialData }) => {
 
         // Gộp Pricing Rules dựa vào sự tương đồng để hiển thị lên UI
         if (initialData.pricingRules && initialData.pricingRules.length > 0) {
-           const grouped = {};
+           const grouped: any = {};
            initialData.pricingRules.forEach(r => {
              // Không còn field ruleType nên key gộp chỉ dựa vào thời gian và giá
              const key = `${r.startTime}-${r.endTime}-${r.pricePerHour}`;
@@ -427,7 +427,7 @@ const CourtFormModal = ({ isOpen, onClose, onSave, initialData }) => {
 
   // Validate form
   const validateForm = () => {
-    const newErrors = {};
+    const newErrors: any = {};
     if (!formData.name.trim()) newErrors.name = "Vui lòng nhập tên hệ thống sân";
     if (!formData.address.trim()) newErrors.address = "Vui lòng nhập địa chỉ";
     if (!formData.phone.trim()) newErrors.phone = "Vui lòng nhập số điện thoại";
@@ -516,7 +516,7 @@ const CourtFormModal = ({ isOpen, onClose, onSave, initialData }) => {
             <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-lg flex flex-col gap-1 text-red-700 text-sm animate-in slide-in-from-top-2">
               <div className="flex items-center gap-2 font-bold"><AlertTriangle size={16} /> Vui lòng kiểm tra lại các thông tin sau:</div>
               <ul className="list-disc pl-8 m-0 mt-1 space-y-1">
-                {Object.values(errors).map((err, i) => <li key={i}>{err}</li>)}
+                {Object.values(errors).map((err, i) => <li key={i}>{String(err)}</li>)}
               </ul>
             </div>
           )}
@@ -565,7 +565,7 @@ const CourtFormModal = ({ isOpen, onClose, onSave, initialData }) => {
                       type="number" 
                       min="1"
                       value={formData.numberOfCourts}
-                      onChange={(e) => { setFormData({...formData, numberOfCourts: parseInt(e.target.value) || 1}); if(e.target.value > 0) setErrors({...errors, numberOfCourts: null}); }}
+                      onChange={(e) => { setFormData({...formData, numberOfCourts: parseInt(e.target.value) || 1}); if(Number(e.target.value) > 0) setErrors({...errors, numberOfCourts: null}); }}
                       className={`w-full px-3 py-2 bg-slate-50 border rounded-lg text-sm focus:outline-none focus:ring-2 ${errors.numberOfCourts ? 'border-red-300 focus:ring-red-200' : 'border-slate-300 focus:ring-indigo-500'}`} 
                     />
                   </div>
@@ -705,33 +705,33 @@ const CourtFormModal = ({ isOpen, onClose, onSave, initialData }) => {
 };
 
 export const CourtDashBoard = () => {
-  const [courts, setCourts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [courts, setCourts] = useState<any>([]);
+  const [loading, setLoading] = useState<any>(true);
+  const [error, setError] = useState<any>(null);
   
   // Pagination
-  const [totalItems, setTotalItems] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [totalItems, setTotalItems] = useState<any>(0);
+  const [totalPages, setTotalPages] = useState<any>(1);
+  const [currentPage, setCurrentPage] = useState<any>(1);
   const itemsPerPage = 8; // Dùng 8 để xếp grid đẹp
 
   // Modals
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [isFormModalOpen, setIsFormModalOpen] = useState(false); 
-  const [isProcessing, setIsProcessing] = useState(false); 
-  const [processAction, setProcessAction] = useState('saving'); 
-  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-  const [isViewLoading, setIsViewLoading] = useState(false); 
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<any>(false);
+  const [isFormModalOpen, setIsFormModalOpen] = useState<any>(false); 
+  const [isProcessing, setIsProcessing] = useState<any>(false); 
+  const [processAction, setProcessAction] = useState<any>('saving'); 
+  const [isViewModalOpen, setIsViewModalOpen] = useState<any>(false);
+  const [isViewLoading, setIsViewLoading] = useState<any>(false); 
 
-  const [selectedCourt, setSelectedCourt] = useState(null); 
-  const [processCourtName, setProcessCourtName] = useState("");
+  const [selectedCourt, setSelectedCourt] = useState<any>(null); 
+  const [processCourtName, setProcessCourtName] = useState<any>("");
 
   // Search
-  const [searchQuery, setSearchQuery] = useState("");
-  const [appliedSearchQuery, setAppliedSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState<any>("");
+  const [appliedSearchQuery, setAppliedSearchQuery] = useState<any>("");
 
   // Toast
-  const [notification, setNotification] = useState(null);
+  const [notification, setNotification] = useState<any>(null);
 
   const showNotification = (message, type = 'success') => {
     setNotification({ message, type });
@@ -745,8 +745,8 @@ export const CourtDashBoard = () => {
       
       const pageIndex = currentPage - 1;
       const params = new URLSearchParams();
-      params.append('page', pageIndex);
-      params.append('size', itemsPerPage);
+      params.append('page', String(pageIndex));
+      params.append('size', String(itemsPerPage));
       if (appliedSearchQuery.trim()) {
         params.append('name', appliedSearchQuery.trim());
       }
@@ -1057,7 +1057,7 @@ export const CourtDashBoard = () => {
             
             {/* Ảnh Cover */}
             <div className="h-44 relative bg-gray-200 overflow-hidden">
-              <img src={imageUrl} alt={court.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={(e) => { e.target.src = 'https://via.placeholder.com/600x300?text=San+Cau+Long'; }}/>
+              <img src={imageUrl} alt={court.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={(e) => { (e.currentTarget as HTMLImageElement).src = 'https://via.placeholder.com/600x300?text=San+Cau+Long'; }}/>
               <div className="absolute inset-0 bg-black/10 group-hover:bg-black/30 transition-colors"></div>
 
               {/* Status Badge */}
