@@ -1,3 +1,5 @@
+import { API_DEFAULT_HEADERS } from './api-headers';
+
 const LEGACY_API_BASE_URL = 'http://localhost:8086/api/v1';
 const LEGACY_AUTH_BASE_URL = 'http://localhost:8085/api/v1';
 
@@ -24,6 +26,26 @@ const rewriteUrl = (url: string) => {
   return url;
 };
 
+const withDefaultHeaders = (init?: RequestInit, inheritedHeaders?: HeadersInit): RequestInit => {
+  const mergedHeaders = new Headers(inheritedHeaders);
+
+  if (init?.headers) {
+    const initHeaders = new Headers(init.headers);
+    initHeaders.forEach((value, key) => {
+      mergedHeaders.set(key, value);
+    });
+  }
+
+  Object.entries(API_DEFAULT_HEADERS).forEach(([key, value]) => {
+    mergedHeaders.set(key, value);
+  });
+
+  return {
+    ...init,
+    headers: mergedHeaders,
+  };
+};
+
 export const installApiBaseUrlRewrite = () => {
   const marker = '__api_base_url_rewrite_installed__';
   const globalScope = globalThis as typeof globalThis & Record<string, unknown>;
@@ -36,21 +58,24 @@ export const installApiBaseUrlRewrite = () => {
 
   globalThis.fetch = (input: RequestInfo | URL, init?: RequestInit) => {
     if (typeof input === 'string') {
-      return originalFetch(rewriteUrl(input), init);
+      return originalFetch(rewriteUrl(input), withDefaultHeaders(init));
     }
 
     if (input instanceof URL) {
-      return originalFetch(new URL(rewriteUrl(input.toString())), init);
+      return originalFetch(new URL(rewriteUrl(input.toString())), withDefaultHeaders(init));
     }
 
     if (input instanceof Request) {
+      const nextInit = withDefaultHeaders(init, input.headers);
       const rewritten = rewriteUrl(input.url);
       if (rewritten !== input.url) {
-        return originalFetch(new Request(rewritten, input), init);
+        return originalFetch(new Request(rewritten, input), nextInit);
       }
+
+      return originalFetch(input, nextInit);
     }
 
-    return originalFetch(input, init);
+    return originalFetch(input, withDefaultHeaders(init));
   };
 
   globalScope[marker] = true;
